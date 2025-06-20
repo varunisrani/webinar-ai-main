@@ -60,7 +60,7 @@ const page = () => {
         </FeatureSectionLayout>
         <FeatureSectionLayout
           heading="See the list of your current customers"
-          link="/pipeline"
+          link="/lead"
         >
           <div className="flex gap-4 items-center h-full w-full justify-center relative flex-wrap">
             {potentialCustomer.slice(0, 2).map((customer, index) => (

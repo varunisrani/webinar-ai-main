@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -98,6 +99,9 @@ const CreateWebinarButton = ({ assistants }: Props) => {
         ) : (
           <>
             <DialogTitle className="sr-only">Create AI Session</DialogTitle>
+            <DialogDescription className="sr-only">
+              Create a new AI session by following the steps below
+            </DialogDescription>
             <MultiStepForm steps={steps} onComplete={handleComplete} />
           </>
         )}

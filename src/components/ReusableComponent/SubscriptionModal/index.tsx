@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -77,7 +78,9 @@ const SubscriptionModal = ({ user }: Props) => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Spotlight Subscription</DialogTitle>
-
+          <DialogDescription>
+            Enter your payment details to subscribe to Spotlight and unlock all features.
+          </DialogDescription>
         </DialogHeader>
         
         <CardElement
