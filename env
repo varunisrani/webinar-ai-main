@@ -1,0 +1,41 @@
+# Environment variables declared in this file are automatically made available to Prisma.
+# See the documentation for more detail: https://pris.ly/d/prisma-schema#accessing-environment-variables-from-the-schema
+
+# Prisma supports the native connection string format for PostgreSQL, MySQL, SQLite, SQL Server, MongoDB and CockroachDB.
+# See the documentation for all the connection string options: https://pris.ly/d/connection-strings
+
+
+ENVIRONMENT=development
+
+# Neon db
+DATABASE_URL='postgresql://neondb_owner:npg_x6ODPjXn9Swa@ep-falling-mountain-a8n0z7qv.eastus2.azure.neon.tech/neondb?sslmode=require'
+
+# clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_YnVzeS1mcm9nLTU0LmNsZXJrLmFjY291bnRzLmRldiQ
+CLERK_SECRET_KEY=sk_test_ZIF7mQttBzmQmU6f9ccMA63txU5FHftrE66R9VHUVv
+NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL=/callback
+NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL=/callback
+
+
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
+# Stripe API
+STRIPE_SECRET_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY==pk_test_YnVzeS1mcm9nLTU0LmNsZXJrLmFjY291bnRzLmRldiQ
+NEXT_PUBLIC_STRIPE_CLIENT_ID=sk_test_ZIF7mQttBzmQmU6f9ccMA63txU5FHftrE66R9VHUVv
+STRIPE_WEBHOOK_SECRET=
+
+# Vapi
+VAPI_PRIVATE_KEY=7c8c8631-0c91-44be-beb9-803f13395cda
+VAPI_ORG_ID=a4d3bf94-985c-4f8e-bbff-c034af0a5a96
+NEXT_PUBLIC_VAPI_API_KEY=f4da2222-0354-46e8-9f69-a76186d762f1
+
+
+# GetStream io 
+NEXT_PUBLIC_STREAM_API_KEY=zpgehqx8ze8j
+STREAM_SECRET=9fng9mhsxkhj6cgr2ajvg37pqgvp2fzcwyx6pa22c3tgbmsadmz2yddm8eckjp6d
+
+
+# Resend
+RESEND_API_KEY=re_iXjJfGFe_MUaSpjokPop7z4TTYfYFkuCs
+

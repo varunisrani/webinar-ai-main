@@ -130,8 +130,9 @@ model AiAgents {
   model      String  @db.VarChar(50)
   provider   String  @db.VarChar(50)
   userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  User User[]
+  @@index([userId])
 }
