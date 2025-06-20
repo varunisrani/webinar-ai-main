@@ -8,7 +8,7 @@ export const createAssistant = async (name: string, userId: string) => {
   try {
     const createAssistant = await vapiServer.assistants.create({
       name: name,
-      firstMessage: `Hi there, this is ${name} from customer support. How can I help you today?`,
+      firstMessage: `Hey! This is ${name} from our brand partnerships team. I've been checking out your content and I'm really excited to chat with you about an amazing 5-video campaign opportunity we have. Are you ready to hear about something that could be a perfect fit for your audience?`,
       model: {
         model: "gpt-4o",
         provider: "openai",
@@ -32,7 +32,7 @@ export const createAssistant = async (name: string, userId: string) => {
         provider: "openai",
         prompt: aiAgentPrompt,
         name: name,
-        firstMessage: `Hi there, this is ${name} from customer support. How can I help you today?`,
+        firstMessage: `Hey! This is ${name} from our brand partnerships team. I've been checking out your content and I'm really excited to chat with you about an amazing 5-video campaign opportunity we have. Are you ready to hear about something that could be a perfect fit for your audience?`,
         userId: userId,
         User:{
           connect: {

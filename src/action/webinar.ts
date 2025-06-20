@@ -1,90 +1,129 @@
 "use server";
 
 import { prismaClient } from "@/lib/prismaClient";
-import { WebinarFormState } from "@/store/useWebinarStore";
 import { revalidatePath } from "next/cache";
-import { onAuthenticateUser } from "./auth";
+import { currentUser } from "@clerk/nextjs/server";
+import { createAndStartStream } from "./stremIo";
 import { WebinarStatusEnum } from "@prisma/client";
 
-export const createWebinar = async (formData: WebinarFormState) => {
+export const createWebinar = async (
+  formData: {
+    basicInfo: {
+      webinarName?: string;
+      description?: string;
+      // No date/time for instant sessions
+    };
+    cta: {
+      ctaLabel?: string;
+      tags?: string[];
+      ctaType?: string;
+      aiAgent?: string;
+      // No priceId for non-sales focus
+    };
+    additionalInfo: {
+      lockChat?: boolean;
+      couponCode?: string;
+      couponEnabled?: boolean;
+    };
+  }
+) => {
   try {
-    const user = await onAuthenticateUser();
-
-    if (!user.user) {
-      return { status: 401, message: "Unauthorized" };
-    }
-
-    // BYPASS SUBSCRIPTION CHECK FOR LOCAL/DEV
-    // if (!user.user.subscription) {
-    //   return { status: 402, message: "Subscription required" };
-    // }
-
-    const presenterId = user.user.id;
-
-    console.log("Form Data:", formData, presenterId);
-
-    // Validate required fields
-    if (!formData.basicInfo.webinarName) {
-      return { status: 404, message: "Webinar name is required" };
-    }
-
-    if (!formData.basicInfo.date) {
-      return { status: 404, message: "Webinar date is required" };
-    }
-
-    if (!formData.basicInfo.time) {
-      return { status: 404, message: "Webinar time is required" };
-    }
-
-    // Validate that the date is not in the past
-    const combinedDateTime = combineDateTime(
-      formData.basicInfo.date,
-      formData.basicInfo.time,
-      formData.basicInfo.timeFormat || "AM"
-    );
-
-    const now = new Date();
-    if (combinedDateTime < now) {
+    // Get the current user
+    const user = await currentUser();
+    if (!user?.id) {
       return {
-        status: 400,
-        message: "Webinar date and time cannot be in the past",
+        status: 401,
+        message: "Unauthorized: Please sign in to create a session",
       };
     }
 
-    // Create the webinar with the UUID specified explicitly
+    const userRecord = await prismaClient.user.findUnique({
+      where: { clerkId: user.id },
+    });
+
+    if (!userRecord) {
+      return {
+        status: 404,
+        message: "User not found",
+      };
+    }
+
+    const presenterId = userRecord.id;
+
+    // Validate AI Agent is provided and belongs to user
+    if (!formData.cta.aiAgent) {
+      return {
+        status: 400,
+        message: "AI Agent selection is required for instant sessions",
+      };
+    }
+
+    const aiAgent = await prismaClient.aiAgents.findFirst({
+      where: {
+        id: formData.cta.aiAgent,
+        userId: presenterId,
+      },
+    });
+
+    if (!aiAgent) {
+      return {
+        status: 400,
+        message: "Selected AI Agent not found or doesn't belong to you",
+      };
+    }
+
+    // Set start time to now for instant sessions
+    const startTime = new Date();
+
+    // Create the webinar/session with instant start
     const webinar = await prismaClient.webinar.create({
       data: {
-        title: formData.basicInfo.webinarName,
+        title: formData.basicInfo.webinarName || "AI Session",
         description: formData.basicInfo.description || "",
-        startTime: combinedDateTime,
+        startTime: startTime, // Start immediately
         tags: formData.cta.tags || [],
-        ctaLabel: formData.cta.ctaLabel,
-        ctaType: formData.cta.ctaType,
-        aiAgentId: formData.cta.aiAgent || null,
-        priceId: formData.cta.priceId || null,
+        ctaLabel: formData.cta.ctaLabel || "Start AI Session",
+        ctaType: "BOOK_A_CALL", // Always AI interaction for instant sessions
+        aiAgentId: formData.cta.aiAgent,
+        priceId: null, // No pricing for instant AI sessions
         lockChat: formData.additionalInfo.lockChat || false,
         couponCode: formData.additionalInfo.couponEnabled
           ? formData.additionalInfo.couponCode
           : null,
         couponEnabled: formData.additionalInfo.couponEnabled || false,
         presenterId: presenterId,
+        webinarStatus: "WAITING_ROOM", // Start in waiting room for immediate access
       },
     });
 
-    // Revalidate the webinars page to show the new webinar
+    // Auto-start the stream for instant sessions
+    try {
+      await createAndStartStream(webinar);
+      
+      // Update status to LIVE immediately
+      await prismaClient.webinar.update({
+        where: { id: webinar.id },
+        data: { webinarStatus: "LIVE" },
+      });
+    } catch (streamError) {
+      console.error("Error auto-starting stream:", streamError);
+      // Don't fail the entire creation if stream fails - user can manually start
+    }
+
+    // Revalidate the webinars page to show the new session
     revalidatePath("/");
 
     return {
       status: 200,
-      message: "Webinar created successfully",
+      message: "AI Session created and started successfully!",
       webinarId: webinar.id,
-      webinarLink: `/webinar/${webinar.id}`,
+      webinarLink: `/live-webinar/${webinar.id}`,
     };
   } catch (error) {
-    console.error("Error creating webinar:", error);
+    console.error("Error creating AI session:", error);
     return {
       status: 500,
-      message: "Failed to create webinar. Please try again.",
+      message: "Failed to create AI session. Please try again.",
     };
   }
 };

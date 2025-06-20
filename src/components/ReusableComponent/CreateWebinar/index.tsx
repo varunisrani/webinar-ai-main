@@ -13,15 +13,15 @@ import CTAStep from "./CTAStep";
 import AdditionalInfoStep from "./AdditionalInfoStep";
 import { useWebinarStore } from "@/store/useWebinarStore";
 import PlusIcon from "@/icons/PlusIcon";
-import Stripe from "stripe";
 import { AiAgents } from "@prisma/client";
+import { Zap } from "lucide-react";
 
 type Props = {
   assistants: AiAgents[] | [];
-  stripeProducts: Stripe.Product[] | [];
+  stripeProducts?: any[]; // Keep for backward compatibility but not used
 };
 
-const CreateWebinarButton = ({ assistants, stripeProducts }: Props) => {
+const CreateWebinarButton = ({ assistants }: Props) => {
   const { isModalOpen, isComplete, setModalOpen, setComplete, resetForm } =
     useWebinarStore();
 
@@ -30,24 +30,20 @@ const CreateWebinarButton = ({ assistants, stripeProducts }: Props) => {
   const steps = [
     {
       id: "basicInfo",
-      title: "Basic Information",
-      description: "Please fill out the standard info needed for your webinar",
+      title: "Session Details",
+      description: "Set up your instant AI interaction session",
       component: <BasicInfoStep />,
     },
     {
       id: "cta",
-      title: "CTA",
-      description:
-        "Please provide the end-point for your customers through your webinar",
-      component: (
-        <CTAStep assistants={assistants} stripeProducts={stripeProducts} />
-      ),
+      title: "AI Configuration",
+      description: "Select and configure your AI agent for the session",
+      component: <CTAStep assistants={assistants} />,
     },
     {
       id: "additionalInfo",
-      title: "Additional information",
-      description:
-        "Please fill out information about additional options if necessary",
+      title: "Session Options",
+      description: "Configure additional settings for your AI session",
       component: <AdditionalInfoStep />,
     },
   ];
@@ -85,14 +81,14 @@ const CreateWebinarButton = ({ assistants, stripeProducts }: Props) => {
           className="rounded-xl flex gap-2 items-center hover:cursor-pointer px-4 py-2 border border-border bg-primary/10 backdrop-blur-sm text-sm font-normal text-primary hover:bg-primary-20"
           onClick={() => setModalOpen(true)}
         >
-          <PlusIcon />
-          Create Webinar
+          <Zap className="h-4 w-4" />
+          Create AI Session
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[900px] p-0 bg-transparent border-none">
         {isComplete ? (
           <div className="bg-muted text-primary rounded-lg overflow-hidden">
-            <DialogTitle className="sr-only">Webinar Created</DialogTitle>
+            <DialogTitle className="sr-only">AI Session Created</DialogTitle>
             <SuccessStep
               webinarLink={webinarLink}
               onCreateNew={handleCreateNew}
@@ -101,7 +97,7 @@ const CreateWebinarButton = ({ assistants, stripeProducts }: Props) => {
           </div>
         ) : (
           <>
-            <DialogTitle className="sr-only">Create Webinar</DialogTitle>
+            <DialogTitle className="sr-only">Create AI Session</DialogTitle>
             <MultiStepForm steps={steps} onComplete={handleComplete} />
           </>
         )}

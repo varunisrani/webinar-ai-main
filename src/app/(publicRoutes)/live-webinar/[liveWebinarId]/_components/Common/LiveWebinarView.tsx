@@ -18,6 +18,10 @@ import { changeWebinarStatus } from "@/action/webinar";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ObsDialogBox from "./ObsDialogBox";
+import AIAgentHelper from "./AIAgentHelper";
+import AIAgentParticipant from "./AIAgentParticipant";
+import AIAgentChatIntegration from "./AIAgentChatIntegration";
+import { StreamChatClientManager } from "@/lib/stream/streamChatClient";
 
 type Props = {
   showChat: boolean;
@@ -50,16 +54,21 @@ const LiveWebinarView = ({
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [obsDialogBox, setObsDialogOpen] = useState(false);
+  const [isMultiTabMode, setIsMultiTabMode] = useState(false);
+  const [aiAgentConnected, setAiAgentConnected] = useState(false);
   
 
   const handleEndStream = async () => {
     setLoading(true);
     try {
-      call.stopLive({
-        continue_recording:false
+      // Stop the live stream
+      await call.stopLive({
+        continue_recording: false
       });
-      call.endCall();
+      
+      // Update webinar status in database
       await changeWebinarStatus(webinar.id, "ENDED");
+      
       toast.success("Webinar ended successfully");
       router.refresh();
     } catch (error) {
@@ -78,122 +87,141 @@ const LiveWebinarView = ({
       type: "open_cta_dialog",
     });
   };
-  
 
-
-
-
-  
+  // Initialize chat client with the new manager
   useEffect(() => {
-    const initChat = async () => {
-      const client = StreamChat.getInstance(
-        process.env.NEXT_PUBLIC_STREAM_API_KEY!
-      );
+    const init = async () => {
+      try {
+        const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY!;
+        
+        // Use the chat client manager to prevent consecutive connectUser warnings
+        const client = await StreamChatClientManager.connectUser(
+          apiKey,
+          {
+            id: userId,
+            name: username,
+            image: webinar.presenter.profileImage || undefined,
+          },
+          userToken
+        );
 
-      await client.connectUser(
-        {
-          id: userId,
-          name: username,
-        },
-        userToken
-      );
+        setChatClient(client);
 
-      const channel = client.channel("livestream", webinar.id, {
-        name: webinar.title,
-      });
+        const channelInstance = client.channel("livestream", webinar.id, {
+          name: webinar.title,
+        });
 
-      await channel.watch();
+        await channelInstance.watch();
+        setChannel(channelInstance);
 
-      setChatClient(client);
-      setChannel(channel);
-    };
+        // Listen for CTA events
+        channelInstance.on((event: any) => {
+          if (event.type === "open_cta_dialog") {
+            setDialogOpen(true);
+          }
+          if (event.type === 'start_live') {
+            window.location.reload();
+          }
+        });
 
-    initChat();
+        // Check for multi-tab mode
+        const isSecondaryTab = sessionStorage.getItem(`webinar-${webinar.id}-secondary-tab`);
+        setIsMultiTabMode(!!isSecondaryTab);
 
-    return () => {
-      if (chatClient) {
-        chatClient.disconnectUser();
+      } catch (error) {
+        console.error("Error initializing chat:", error);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, username, userToken, webinar.id, webinar.title]);
 
-  useEffect(() => {
-    if (chatClient && channel) {
-      channel.on((event: any) => {
-        if (event.type === "open_cta_dialog" && !isHost) {
-          setDialogOpen(true);
-        }
-        if (event.type === 'start_live') {
-          window.location.reload()
-        }
-      });
-    }
-  }, [chatClient, channel, isHost]);
-  
-  
+    init();
 
-  if (!chatClient || !channel) return null;
+    // Cleanup function
+    return () => {
+      if (userId && process.env.NEXT_PUBLIC_STREAM_API_KEY) {
+        StreamChatClientManager.disconnectUser(userId, process.env.NEXT_PUBLIC_STREAM_API_KEY);
+      }
+    };
+  }, [userId, username, userToken, webinar]);
+
+  if (!chatClient || !channel) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="animate-spin mr-2" />
+        <span>Loading webinar...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col w-full h-screen max-h-screen overflow-hidden bg-background text-foreground">
-      {/* Header - kept compact */}
-      <div className="py-2 px-4 border-b border-border flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className="bg-accent-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium flex items-center">
-            <span className="relative flex h-2 w-2 mr-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive animate-pulse"></span>
-            </span>
-            LIVE
-          </div>
-        </div>
+    <div className="flex h-full relative">
+      {/* AI Agent Helper */}
+      <AIAgentHelper 
+        webinarId={webinar.id} 
+        isHost={isHost} 
+        currentComponent="LiveWebinarView"
+      />
 
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-1 bg-muted/50 px-3 py-1 rounded-full">
-            <Users size={16} />
-            <span className="text-sm">{viewerCount}</span>
-          </div>
-          <button
-            onClick={() => setShowChat(!showChat)}
-            className={`px-3 py-1 rounded-full text-sm flex items-center space-x-1 ${
-              showChat
-                ? "bg-accent-primary text-primary-foreground"
-                : "bg-muted/50"
-            }`}
-          >
-            <MessageSquare size={16} />
-            <span>Chat</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex flex-1 p-2 gap-2 overflow-hidden">
-        {/* Video area */}
-        <div className="flex-1 rounded-lg overflow-hidden border border-border flex flex-col bg-card">
-          <div className="flex-1 relative overflow-hidden">
+      {/* Main content area */}
+      <div className={`${showChat ? "w-3/4" : "w-full"} flex flex-col transition-all duration-300`}>
+        {/* Video area - now split between host and AI agent */}
+        <div className="flex-1 relative rounded-lg overflow-hidden">
+          {/* Host video (main area) */}
+          <div className={`${webinar.aiAgentId && webinar.ctaType === "BOOK_A_CALL" ? "h-2/3" : "h-full"} bg-gray-900 relative`}>
             {hostParticipant ? (
-              <div className={`w-full h-full`}>
-                <ParticipantView
-                  participant={hostParticipant}
-                  className="w-full h-full object-cover !max-w-full"
-                />
-              </div>
+              <ParticipantView
+                participant={hostParticipant}
+                className="w-full h-full"
+              />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground flex-col space-y-4">
-                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
-                  <Users size={40} className="text-muted-foreground" />
+              <div className="flex items-center justify-center h-full text-white">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold mb-2">{webinar.title}</h3>
+                  <p className="text-gray-300">Waiting for the host to start...</p>
                 </div>
-                <p>Waiting for stream to start...</p>
               </div>
             )}
+          </div>
 
-            {isHost && (
-              <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
-                Host
+          {/* AI Agent video (bottom area) - only show for BOOK_A_CALL webinars */}
+          {webinar.aiAgentId && webinar.ctaType === "BOOK_A_CALL" && (
+            <div className="h-1/3 border-t border-border">
+              <AIAgentParticipant
+                webinar={webinar}
+                userId={userId}
+                isVisible={true}
+                className="h-full rounded-none border-0"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Controls */}
+        <div className="bg-background border-t border-border">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">LIVE</span>
               </div>
-            )}
+              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                <Users className="w-4 h-4" />
+                <span>{viewerCount} viewers</span>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowChat(!showChat)}
+                className="flex items-center space-x-1"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="hidden sm:inline">
+                  {showChat ? "Hide Chat" : "Show Chat"}
+                </span>
+              </Button>
+            </div>
           </div>
 
           <div className="p-2 border-t border-border flex items-center justify-between py-2">
@@ -201,6 +229,11 @@ const LiveWebinarView = ({
               <div className="text-sm font-medium capitalize">
                 {webinar?.title}
               </div>
+              {isMultiTabMode && (
+                <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
+                  Multi-Tab Mode
+                </span>
+              )}
             </div>
 
             {isHost && (
@@ -242,47 +275,62 @@ const LiveWebinarView = ({
             )}
           </div>
         </div>
+      </div>
 
-        {/* Chat panel */}
-        {showChat && (
+      {/* AI Agent Chat Integration */}
+      {webinar.aiAgentId && webinar.ctaType === "BOOK_A_CALL" && chatClient && channel && (
+        <AIAgentChatIntegration
+          chatClient={chatClient}
+          channel={channel}
+          webinar={webinar}
+          isConnected={aiAgentConnected}
+        />
+      )}
+
+      {/* Chat panel */}
+      {showChat && (
+        <div className="w-1/4 border-l border-border bg-background">
           <Chat client={chatClient}>
             <Channel channel={channel}>
-              <div className="w-72 bg-card border border-border rounded-lg overflow-hidden flex flex-col">
-                <div className="py-2 text-primary px-3 border-b border-border font-medium flex items-center justify-between">
-                  <span>Chat</span>
-                  <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
-                    {viewerCount} viewers
-                  </span>
+              <div className="flex flex-col h-full">
+                <div className="p-3 border-b border-border">
+                  <h3 className="font-medium text-sm">Live Chat</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {viewerCount} participants
+                    {webinar.aiAgentId && webinar.ctaType === "BOOK_A_CALL" && (
+                      <span className="ml-2 text-blue-500">+ AI Assistant</span>
+                    )}
+                  </p>
                 </div>
-
-                <MessageList />
-
-                <div className="p-2 border-t border-border">
-                  <MessageInput />
+                <div className="flex-1 overflow-hidden">
+                  <MessageList />
                 </div>
+                {!webinar.lockChat && (
+                  <div className="border-t border-border">
+                    <MessageInput />
+                  </div>
+                )}
               </div>
             </Channel>
           </Chat>
-        )}
-      </div>
-      {dialogOpen && (
-        <CTADialogBox
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          webinar={webinar}
-          userId={userId}
-        />
+        </div>
       )}
-      {
-        obsDialogBox && (
-          <ObsDialogBox
-            open={obsDialogBox}
-            onOpenChange={setObsDialogOpen}
-            rtmpURL={`rtmps://ingress.stream-io-video.com:443/${process.env.NEXT_PUBLIC_STREAM_API_KEY}.livestream.${webinar.id}`}
-            streamKey={userToken}
-          />
-        )
-      }
+
+      {/* CTA Dialog */}
+      <CTADialogBox
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        webinar={webinar}
+        userId={userId}
+      />
+
+             {/* OBS Dialog */}
+       <ObsDialogBox
+         open={obsDialogBox}
+         onOpenChange={setObsDialogOpen}
+         rtmpURL={`rtmps://ingress.stream-io-video.com:443/${process.env.NEXT_PUBLIC_STREAM_API_KEY}.livestream.${webinar.id}`}
+         streamKey={userToken}
+       />
     </div>
   );
 };

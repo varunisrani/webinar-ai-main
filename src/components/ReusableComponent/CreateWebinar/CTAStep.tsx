@@ -1,11 +1,10 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X, Search } from "lucide-react";
+import { X, Search, Bot, Zap } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,17 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWebinarStore } from "@/store/useWebinarStore";
-import { AiAgents, CtaTypeEnum } from "@prisma/client";
-import Stripe from "stripe";
+import { AiAgents } from "@prisma/client";
 
 type Props = {
   assistants: AiAgents[] | [];
-  stripeProducts: Stripe.Product[] | [];
 };
 
-const CTAStep = ({ assistants, stripeProducts }: Props) => {
+const CTAStep = ({ assistants }: Props) => {
   const {
     formData,
     updateCTAField,
@@ -33,11 +29,9 @@ const CTAStep = ({ assistants, stripeProducts }: Props) => {
     getStepValidationErrors,
   } = useWebinarStore();
 
-  const { ctaLabel, tags, aiAgent, priceId, ctaType } = formData.cta;
+  const { ctaLabel, tags, aiAgent } = formData.cta;
 
-  console.log("CTAStep", formData)
   const errors = getStepValidationErrors("cta");
-
   const [tagInput, setTagInput] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,179 +47,151 @@ const CTAStep = ({ assistants, stripeProducts }: Props) => {
     }
   };
 
-  const handleSelectCTAType = (value: string) => {
-    updateCTAField("ctaType", value as CtaTypeEnum);
-  };
-
   const handleSelectAgent = (value: string) => {
     updateCTAField("aiAgent", value);
   };
 
-  const handleProductChange = (value: string) => {
-    updateCTAField("priceId", value);
-  };
-
   return (
     <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-primary mb-2">Configure AI Agent</h2>
+        <p className="text-muted-foreground">
+          Select your AI agent and customize the interaction experience
+        </p>
+      </div>
+
+      {/* AI Agent Selection - Required */}
       <div className="space-y-2">
-        <Label
-          htmlFor="ctaLabel"
-          className={errors.ctaLabel ? "text-red-400" : ""}
-        >
-          CTA Label <span className="text-red-400">*</span>
+        <Label className={errors.aiAgent ? 'text-red-400' : ''}>
+          <div className="flex items-center gap-2">
+            <Bot className="h-4 w-4" />
+            Select AI Agent <span className="text-red-400">*</span>
+          </div>
         </Label>
-        <Input
-          id="ctaLabel"
-          name="ctaLabel"
-          value={ctaLabel || ""}
-          onChange={handleChange}
-          placeholder="Let's Get Started"
-          className={cn(
-            "!bg-background/50 border border-input",
-            errors.ctaLabel && "border-red-400 focus-visible:ring-red-400"
-          )}
-        />
-        {errors.ctaLabel && (
-          <p className="text-sm text-red-400">{errors.ctaLabel}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="tags">Tags</Label>
-        <Input
-          id="tags"
-          value={tagInput}
-          onChange={(e) => setTagInput(e.target.value)}
-          onKeyDown={handleAddTag}
-          placeholder="Add tags and press Enter"
-          className="!bg-background/50 border border-input"
-        />
-
-        {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {tags.map((tag: string, index: number) => (
-              <div
-                key={index}
-                className="flex items-center gap-1 bg-gray-800 text-white px-3 py-1 rounded-md"
-              >
-                {tag}
-                <button
-                  onClick={() => removeTag(tag)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-2 w-full">
-        <Label>CTA Type</Label>
-        <Tabs defaultValue={CtaTypeEnum.BOOK_A_CALL} className="w-full">
-          <TabsList className="w-full bg-transparent">
-            <TabsTrigger
-              value={CtaTypeEnum.BOOK_A_CALL}
-              className="w-1/2 data-[state=active]:!bg-background/50"
-              onClick={() => handleSelectCTAType(CtaTypeEnum.BOOK_A_CALL)}
-            >
-              Book a Call
-            </TabsTrigger>
-            <TabsTrigger
-              value={CtaTypeEnum.BUY_NOW}
-              className="w-1/2"
-              onClick={() => handleSelectCTAType(CtaTypeEnum.BUY_NOW)}
-            >
-              Buy Now
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {ctaType === CtaTypeEnum.BOOK_A_CALL && (
-        <div className="space-y-2">
-          <Label>Attach an AI Agent</Label>
-          <div className="relative">
-            <div className="mb-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-                <Input
-                  placeholder="Search agents"
-                  className="pl-9 !bg-background/50 border border-input"
-                />
-              </div>
-            </div>
-
-            <Select
-              value={aiAgent}
-              onValueChange={handleSelectAgent}
-            >
-              <SelectTrigger className="w-full !bg-background/50 border border-input">
-                <SelectValue placeholder="Select an Agent" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-input max-h-48">
-                {assistants?.length > 0 ? (
-                  assistants.map((assistant) => (
-                    <SelectItem
-                      key={assistant.id}
-                      value={assistant.id}
-                      className="!bg-background/50 hover:!bg-white/10"
-                    >
-                      {assistant.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="No Agent Available" disabled>
-                    No agents available
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <Label>Attach an Product</Label>
         <div className="relative">
           <div className="mb-2">
             <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-                <Input
-                  placeholder="Search agents"
-                  className="pl-9 !bg-background/50 border border-input"
-                />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search AI agents..."
+                className="pl-9 !bg-background/50 border border-input"
+              />
             </div>
           </div>
 
           <Select
-            value={priceId || ""}
-            onValueChange={handleProductChange}
+            value={aiAgent}
+            onValueChange={handleSelectAgent}
           >
-            <SelectTrigger className="w-full !bg-background/50 border border-input">
-              <SelectValue placeholder="Select an product" />
+            <SelectTrigger className={cn(
+              "w-full !bg-background/50 border border-input",
+              errors.aiAgent && "border-red-400 focus-visible:ring-red-400"
+            )}>
+              <SelectValue placeholder="Choose an AI agent for this session" />
             </SelectTrigger>
             <SelectContent className="bg-background border border-input max-h-48">
-              {stripeProducts?.length > 0 ? (
-                stripeProducts.map((product) => (
+              {assistants?.length > 0 ? (
+                assistants.map((assistant) => (
                   <SelectItem
-                    key={product.id}
-                    value={product?.default_price?.toString() || ""}
+                    key={assistant.id}
+                    value={assistant.id}
                     className="!bg-background/50 hover:!bg-white/10"
                   >
-                    {product.name}
+                    <div className="flex items-center gap-2">
+                      <Bot className="h-4 w-4 text-blue-500" />
+                      {assistant.name}
+                    </div>
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="No Product Available" disabled>
-                  Create product in stripe
+                <SelectItem value="no-agent" disabled>
+                  <div className="text-muted-foreground">
+                    No AI agents available. Create one first!
+                  </div>
                 </SelectItem>
               )}
             </SelectContent>
           </Select>
         </div>
+        {errors.aiAgent && (
+          <p className="text-sm text-red-400">{errors.aiAgent}</p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          This AI agent will interact with participants during the session
+        </p>
       </div>
+
+      {/* Session Call-to-Action */}
+      <div className="space-y-2">
+        <Label>
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Session Action Button Text
+          </div>
+        </Label>
+        <Input
+          name="ctaLabel"
+          value={ctaLabel || ''}
+          onChange={handleChange}
+          placeholder="Talk to AI Assistant"
+          className="!bg-background/50 border border-input"
+        />
+        <p className="text-xs text-muted-foreground">
+          Text that appears on the button participants click to start AI interaction
+        </p>
+      </div>
+
+      {/* Tags for categorization */}
+      <div className="space-y-2">
+        <Label>
+          Session Tags
+        </Label>
+        <div className="space-y-2">
+          <Input
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={handleAddTag}
+            placeholder="Add tags (press Enter to add)"
+            className="!bg-background/50 border border-input"
+          />
+          {tags && tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full text-sm"
+                >
+                  {tag}
+                                     <button
+                     onClick={() => removeTag(tag)}
+                     className="hover:bg-primary/20 rounded-full p-0.5"
+                   >
+                     <X className="h-3 w-3" />
+                   </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Add tags to help categorize and organize your AI sessions
+        </p>
+      </div>
+
+      {/* AI Session Preview */}
+      {aiAgent && (
+        <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Bot className="h-5 w-5 text-green-600" />
+            <span className="font-medium text-green-700 dark:text-green-300">
+              AI Agent Ready
+            </span>
+          </div>
+          <p className="text-sm text-green-600 dark:text-green-400">
+            Your selected AI agent is configured and ready to interact with participants!
+          </p>
+        </div>
+      )}
     </div>
   );
 };

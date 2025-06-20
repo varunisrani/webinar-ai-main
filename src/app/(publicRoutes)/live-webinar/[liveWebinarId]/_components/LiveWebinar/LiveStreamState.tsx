@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import {
   StreamVideo,
-  StreamVideoClient,
   User as StreamUser,
 } from "@stream-io/video-react-sdk";
 import { User } from "@prisma/client";
 import { WebinarWithPresenter } from "@/lib/type";
 import CustomLivestreamPlayer from "./CustomLiveStreamPlayer";
 import { getTokenForHost } from "@/action/stremIo";
+import { StreamVideoClientManager } from "@/lib/stream/streamVideoClient";
 
 type Props = {
   apiKey: string;
@@ -18,12 +18,12 @@ type Props = {
 
 const LiveStreamState = ({ apiKey, callId, webinar, user }: Props) => {
   const [hostToken, setHostToken] = useState<string | null>(null);
-  const [client, setClient] = useState<StreamVideoClient | null>(null);
-
+  const [client, setClient] = useState<any>(null);
 
   useEffect(() => {
     const init = async () => {
       try {
+        // Get token for the host
         const token = await getTokenForHost(
           webinar.presenterId,
           webinar.presenter.name,
@@ -36,11 +36,12 @@ const LiveStreamState = ({ apiKey, callId, webinar, user }: Props) => {
           image: webinar.presenter.profileImage,
         };
 
-        const streamClient = new StreamVideoClient({
+        // Use the client manager to get or create a client instance
+        const streamClient = StreamVideoClientManager.getOrCreateInstance(
           apiKey,
-          user: hostUser,
-          token,
-        });
+          hostUser,
+          token
+        );
 
         setHostToken(token);
         setClient(streamClient);
@@ -50,6 +51,13 @@ const LiveStreamState = ({ apiKey, callId, webinar, user }: Props) => {
     };
 
     init();
+
+    // Cleanup function to disconnect client when component unmounts
+    return () => {
+      if (client && webinar.presenterId) {
+        StreamVideoClientManager.disconnectClient(webinar.presenterId, apiKey);
+      }
+    };
   }, [apiKey, webinar]);
 
   if (!client || !hostToken) return null;

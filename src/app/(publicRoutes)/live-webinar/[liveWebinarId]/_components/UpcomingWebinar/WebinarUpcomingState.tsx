@@ -28,17 +28,40 @@ const WebinarUpcomingState = ({ webinar, currentUser }: Props) => {
       if (!currentUser?.id) {
         throw new Error("User not authenticated");
       }
-      await createAndStartStream(webinar)
+      
+      // Create and start the stream
+      await createAndStartStream(webinar);
+      
+      // Update webinar status to LIVE
       const res = await changeWebinarStatus(webinar.id, "LIVE");
       if (!res.success) {
         throw new Error(res.message);
       }
+      
+      // Send email notifications to attendees
       await sendBulkEmail(webinar.id);
+      
+      // Refresh the page to show the live state
       router.refresh();
       toast.success("Webinar started successfully");
+      
     } catch (error) {
-      console.log(error);
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      console.log("Error starting webinar:", error);
+      
+      // Provide specific error messages for better UX
+      let errorMessage = "Something went wrong";
+      
+      if (error instanceof Error) {
+        if (error.message.includes("already have a live stream")) {
+          errorMessage = "You already have a live webinar running. Please end your current webinar before starting a new one.";
+        } else if (error.message.includes("not authenticated")) {
+          errorMessage = "Please log in to start the webinar.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -68,6 +91,7 @@ const WebinarUpcomingState = ({ webinar, currentUser }: Props) => {
             fill
             className="object-cover"
             priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </div>
         {webinar?.webinarStatus === WebinarStatusEnum.LIVE ? (

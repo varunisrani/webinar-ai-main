@@ -10,32 +10,16 @@ export type ValidationResult = {
 export const validateBasicInfo = (data: {
   webinarName?: string
   description?: string
-  date?: Date
-  time?: string
-  timeFormat?: "AM" | "PM"
+  // Removed date/time fields for instant sessions
 }): ValidationResult => {
   const errors: ValidationErrors = {}
 
   if (!data.webinarName?.trim()) {
-    errors.webinarName = "Webinar name is required"
+    errors.webinarName = "Session name is required"
   }
 
   if (!data.description?.trim()) {
-    errors.description = "Description is required"
-  }
-
-  if (!data.date) {
-    errors.date = "Date is required"
-  }
-
-  if (!data.time?.trim()) {
-    errors.time = "Time is required"
-  } else {
-    // Validate time format (HH:MM)
-    const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9]$/
-    if (!timeRegex.test(data.time)) {
-      errors.time = "Time must be in format HH:MM (e.g., 10:30)"
-    }
+    errors.description = "Session description is required"
   }
 
   return {
@@ -49,15 +33,18 @@ export const validateCTA = (data: {
   tags?: string[]
   ctaType?: string
   aiAgent?: string
+  // Removed priceId for non-sales focus
 }): ValidationResult => {
   const errors: ValidationErrors = {}
 
-  if (!data.ctaLabel?.trim()) {
-    errors.ctaLabel = "CTA label is required"
+  // AI Agent is now required since this is the core feature
+  if (!data.aiAgent?.trim()) {
+    errors.aiAgent = "AI Agent selection is required"
   }
 
-  if (!data.ctaType) {
-    errors.ctaType = "Please select a CTA type"
+  // CTA label is optional - will have default
+  if (data.ctaLabel && data.ctaLabel.trim().length > 50) {
+    errors.ctaLabel = "CTA label must be 50 characters or less"
   }
 
   return {
@@ -84,18 +71,12 @@ export const validateAdditionalInfo = (data: {
   }
 }
 
-
-
-
 export type WebinarStatus = "upcoming" | "live" | "ended"
-
-
 
 export type AttendanceData = {
   count: number;
   users: Attendee[];
 };
-
 
 export type ChatEvent = {
   message: {
@@ -116,7 +97,6 @@ export type ChatEvent = {
 export type WebinarWithPresenter = Webinar & {
   presenter : User
 }
-
 
 export type StreamCallRecording = {
   filename: string;

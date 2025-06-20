@@ -6,16 +6,14 @@ export type WebinarFormState = {
   basicInfo: {
     webinarName?: string
     description?: string
-    date?: Date
-    time?: string
-    timeFormat?: "AM" | "PM"
+    // Removed date/time fields for instant start
   }
   cta: {
     ctaLabel?: string
     tags?: string[]
     ctaType: CtaTypeEnum
     aiAgent?: string
-    priceId?: string
+    // Removed priceId for non-sales focus
   }
   additionalInfo: {
     lockChat?: boolean
@@ -25,24 +23,18 @@ export type WebinarFormState = {
 }
 
 type ValidationState = {
-  basicInfo: {
-    valid: boolean
-    errors: ValidationErrors
-  }
-  cta: {
-    valid: boolean
-    errors: ValidationErrors
-  }
-  additionalInfo: {
-    valid: boolean
-    errors: ValidationErrors
-  }
+  basicInfo: { valid: boolean; errors: ValidationErrors }
+  cta: { valid: boolean; errors: ValidationErrors }
+  additionalInfo: { valid: boolean; errors: ValidationErrors }
 }
 
 type WebinarStore = {
+  // UI state
   isModalOpen: boolean
   isComplete: boolean
   isSubmitting: boolean
+
+  // Form data
   formData: WebinarFormState
   validation: ValidationState
 
@@ -52,27 +44,28 @@ type WebinarStore = {
   setSubmitting: (submitting: boolean) => void
 
   // Form field updaters
-  updateBasicInfoField: <K extends keyof WebinarFormState["basicInfo"]>(
-    field: K,
-    value: WebinarFormState["basicInfo"][K],
+  updateBasicInfoField: (
+    field: keyof WebinarFormState["basicInfo"],
+    value: string | Date | undefined
   ) => void
-
-  updateCTAField: <K extends keyof WebinarFormState["cta"]>(field: K, value: WebinarFormState["cta"][K]) => void
-
-  updateAdditionalInfoField: <K extends keyof WebinarFormState["additionalInfo"]>(
-    field: K,
-    value: WebinarFormState["additionalInfo"][K],
+  updateCTAField: (
+    field: keyof WebinarFormState["cta"],
+    value: string | CtaTypeEnum
+  ) => void
+  updateAdditionalInfoField: (
+    field: keyof WebinarFormState["additionalInfo"],
+    value: string | boolean
   ) => void
 
   // Tag management
   addTag: (tag: string) => void
   removeTag: (tag: string) => void
 
-  // Form validation
-  validateStep: (stepId: keyof WebinarFormState) => boolean
-  getStepValidationErrors: (stepId: keyof WebinarFormState) => ValidationErrors
+  // Validation
+  validateStep: (step: keyof WebinarFormState) => boolean
+  getStepValidationErrors: (step: keyof WebinarFormState) => ValidationErrors
 
-  // Form reset
+  // Form management
   resetForm: () => void
 }
 
@@ -80,16 +73,14 @@ const initialState: WebinarFormState = {
   basicInfo: {
     webinarName: "",
     description: "",
-    date: undefined,
-    time: "",
-    timeFormat: "AM",
+    // No date/time for instant start
   },
   cta: {
-    ctaLabel: "",
+    ctaLabel: "Start AI Session",
     tags: [],
-    ctaType: "BOOK_A_CALL",
+    ctaType: "BOOK_A_CALL", // Default to AI interaction
     aiAgent: "",
-    priceId:""
+    // No priceId for non-sales focus
   },
   additionalInfo: {
     lockChat: false,
@@ -184,7 +175,7 @@ export const useWebinarStore = create<WebinarStore>((set, get) => ({
   },
 
   // Tag management
-  addTag: (tag) => {
+  addTag: (tag: string) => {
     set((state) => {
       const newTags = [...(state.formData.cta.tags || []), tag]
       const newCTA = {
@@ -192,68 +183,64 @@ export const useWebinarStore = create<WebinarStore>((set, get) => ({
         tags: newTags,
       }
 
+      const validationResult = validateCTA(newCTA)
+
       return {
         formData: {
           ...state.formData,
           cta: newCTA,
         },
+        validation: {
+          ...state.validation,
+          cta: validationResult,
+        },
       }
     })
   },
 
-  removeTag: (tagToRemove) => {
+  removeTag: (tagToRemove: string) => {
     set((state) => {
-      const newTags = (state.formData.cta.tags || []).filter((tag) => tag !== tagToRemove)
+      const newTags = (state.formData.cta.tags || []).filter(
+        (tag) => tag !== tagToRemove
+      )
       const newCTA = {
         ...state.formData.cta,
         tags: newTags,
       }
 
+      const validationResult = validateCTA(newCTA)
+
       return {
         formData: {
           ...state.formData,
           cta: newCTA,
         },
+        validation: {
+          ...state.validation,
+          cta: validationResult,
+        },
       }
     })
   },
 
-  validateStep: (stepId) => {
-    const { formData } = get()
-
-    let validationResult
-    switch (stepId) {
-      case "basicInfo":
-        validationResult = validateBasicInfo(formData.basicInfo)
-        break
-      case "cta":
-        validationResult = validateCTA(formData.cta)
-        break
-      case "additionalInfo":
-        validationResult = validateAdditionalInfo(formData.additionalInfo)
-        break
-    }
-
-    set((state) => ({
-      validation: {
-        ...state.validation,
-        [stepId]: validationResult,
-      },
-    }))
-
-    return validationResult.valid
+  // Validation
+  validateStep: (step: keyof WebinarFormState) => {
+    const state = get()
+    return state.validation[step].valid
   },
 
-  getStepValidationErrors: (stepId) => {
-    return get().validation[stepId].errors
+  getStepValidationErrors: (step: keyof WebinarFormState) => {
+    const state = get()
+    return state.validation[step].errors
   },
 
-  resetForm: () =>
+  // Form management
+  resetForm: () => {
     set({
-      isComplete: false,
-      isSubmitting: false,
       formData: initialState,
       validation: initialValidation,
-    }),
+      isComplete: false,
+    })
+  },
 }))
 

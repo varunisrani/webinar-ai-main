@@ -60,20 +60,20 @@ const MultiStepForm = ({ steps, onComplete }: Props) => {
         const result = await createWebinar(formData);
 
         if (result.status === 200 && result.webinarId) {
-          toast.success("Your webinar has been created successfully.");
+          toast.success("🎉 AI Session created and started successfully!");
 
           onComplete(result.webinarId);
         } else {
           toast.error(
-            result.message || "Your webinar has not been created successfully"
+            result.message || "Failed to create AI session. Please try again."
           );
           setValidationError(result.message);
         }
         router.refresh();
       } catch (error) {
-        console.error("Error creating webinar:", error);
-        toast.success("Failed to create webinar. Please try again.");
-        setValidationError("Failed to create webinar. Please try again.");
+        console.error("Error creating AI session:", error);
+        toast.error("Failed to create AI session. Please try again.");
+        setValidationError("Failed to create AI session. Please try again.");
       } finally {
         setSubmitting(false);
       }
@@ -237,10 +237,10 @@ const MultiStepForm = ({ steps, onComplete }: Props) => {
             isSubmitting ? (
               <>
                 <Loader2 className="animate-spin" />
-                Creating...
+                Creating & Starting...
               </>
             ) : (
-              "Complete"
+              "🚀 Create & Start AI Session"
             )
           ) : (
             "Next"
