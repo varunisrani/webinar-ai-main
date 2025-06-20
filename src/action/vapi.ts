@@ -6,9 +6,17 @@ import { vapiServer } from "@/lib/vapi/vapiServer";
 import { randomUUID } from "crypto";
 
 export const createAssistant = async (name: string, userId: string, useDefaultAgent: boolean = true) => {
+  console.log("🎯 Starting createAssistant server action:", {
+    name,
+    userId,
+    useDefaultAgent,
+    timestamp: new Date().toISOString()
+  });
+
   try {
     // Generate our own ID since VAPI might not return one
     const assistantId = randomUUID();
+    console.log("🆔 Generated assistant ID:", assistantId);
     
     const firstMessage = useDefaultAgent 
       ? `Hey! This is ${name} from our brand partnerships team. I've been checking out your content and I'm really excited to chat with you about an amazing 5-video campaign opportunity we have. Are you ready to hear about something that could be a perfect fit for your audience?`
@@ -16,6 +24,14 @@ export const createAssistant = async (name: string, userId: string, useDefaultAg
 
     const systemPrompt = useDefaultAgent ? aiAgentPrompt : "";
 
+    console.log("🤖 Preparing assistant configuration:", {
+      assistantId,
+      firstMessage: firstMessage.substring(0, 50) + "...",
+      hasSystemPrompt: !!systemPrompt,
+      timestamp: new Date().toISOString()
+    });
+
+    console.log("🌐 Creating assistant in VAPI...");
     await vapiServer.assistants.create({
       name: name,
       firstMessage: firstMessage,
@@ -32,7 +48,9 @@ export const createAssistant = async (name: string, userId: string, useDefaultAg
       },
       serverMessages: [],
     });
+    console.log("✅ VAPI assistant created successfully");
 
+    console.log("💾 Creating assistant record in database...");
     const aiAgent = await prismaClient.aiAgents.create({
       data: {
         id: assistantId,
@@ -49,6 +67,11 @@ export const createAssistant = async (name: string, userId: string, useDefaultAg
         }
       },
     });
+    console.log("✅ Database record created successfully:", {
+      assistantId: aiAgent.id,
+      name: aiAgent.name,
+      timestamp: new Date().toISOString()
+    });
 
     return {
       success: true,
@@ -56,7 +79,11 @@ export const createAssistant = async (name: string, userId: string, useDefaultAg
       data: aiAgent,
     };
   } catch (error) {
-    console.error("Error creating agent:", error);
+    console.error("🔴 Error in createAssistant:", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
     return {
       success: false,
       status: 500,
