@@ -17,7 +17,6 @@ type AIAgentParticipantProps = {
 
 const AIAgentParticipant = ({ 
   webinar, 
-  userId, 
   isVisible = true,
   className = "" 
 }: AIAgentParticipantProps) => {

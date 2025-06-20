@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { StreamChat } from "stream-chat";
-import { Bot, MessageCircle } from "lucide-react";
-import { toast } from "sonner";
 import { vapi } from "@/lib/vapi/vapiClient";
 import { WebinarWithPresenter } from "@/lib/type";
 
 type AIAgentChatIntegrationProps = {
   chatClient: StreamChat | null;
-  channel: any;
+  channel: any; // Stream chat channel type
   webinar: WebinarWithPresenter;
   isConnected: boolean;
 };
 
 const AIAgentChatIntegration = ({ 
-  chatClient, 
   channel, 
   webinar, 
   isConnected 
@@ -23,7 +20,7 @@ const AIAgentChatIntegration = ({
   const [aiMessages, setAiMessages] = useState<string[]>([]);
 
   // Send AI agent join message
-  const sendAIJoinMessage = async () => {
+  const sendAIJoinMessage = useCallback(async () => {
     if (!channel || !webinar.aiAgentId) return;
 
     try {
@@ -39,10 +36,10 @@ const AIAgentChatIntegration = ({
     } catch (error) {
       console.error("Error sending AI join message:", error);
     }
-  };
+  }, [channel, webinar.aiAgentId]);
 
   // Send AI agent leave message
-  const sendAILeaveMessage = async () => {
+  const sendAILeaveMessage = useCallback(async () => {
     if (!channel || !webinar.aiAgentId) return;
 
     try {
@@ -58,10 +55,10 @@ const AIAgentChatIntegration = ({
     } catch (error) {
       console.error("Error sending AI leave message:", error);
     }
-  };
+  }, [channel, webinar.aiAgentId]);
 
   // Send AI response to chat based on voice interaction
-  const sendAIResponseToChat = async (message: string) => {
+  const sendAIResponseToChat = useCallback(async (message: string) => {
     if (!channel || !webinar.aiAgentId) return;
 
     try {
@@ -77,7 +74,7 @@ const AIAgentChatIntegration = ({
     } catch (error) {
       console.error("Error sending AI response to chat:", error);
     }
-  };
+  }, [channel, webinar.aiAgentId]);
 
   // Handle AI agent speaking - send to chat
   useEffect(() => {
@@ -105,7 +102,7 @@ const AIAgentChatIntegration = ({
       vapi.off("speech-start", handleSpeechStart);
       vapi.off("message", handleMessage);
     };
-  }, [channel, isConnected]);
+  }, [channel, isConnected, sendAIResponseToChat]);
 
   // Handle connection status changes
   useEffect(() => {
@@ -114,13 +111,14 @@ const AIAgentChatIntegration = ({
     } else {
       sendAILeaveMessage();
     }
-  }, [isConnected]);
+  }, [isConnected, sendAIJoinMessage, sendAILeaveMessage]);
 
   // Monitor chat messages to respond to AI mentions
   useEffect(() => {
     if (!channel || !isConnected) return;
 
     const handleNewMessage = (event: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = event.message;
       
       // Check if message mentions AI or asks questions
@@ -145,7 +143,7 @@ const AIAgentChatIntegration = ({
     return () => {
       channel.off('message.new', handleNewMessage);
     };
-  }, [channel, isConnected]);
+  }, [channel, isConnected, sendAIResponseToChat]);
 
   return (
     <div className="hidden">

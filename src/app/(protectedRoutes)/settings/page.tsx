@@ -1,6 +1,6 @@
 import { onAuthenticateUser } from '@/action/auth'
 import { getStripeOAuthLink } from '@/lib/stripe/utlis'
-import { forceEndAllStreams } from '@/action/stremIo'
+
 import { getWebinarByPresenterId } from '@/action/webinar'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -14,8 +14,6 @@ import {
   Clock,
   Shield,
   Zap,
-  Radio,
-  Square,
 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import StreamManagement from './_components/StreamManagement'
@@ -109,7 +107,7 @@ const StripeConnectPage = async () => {
                       Quick Setup Process (5-10 minutes)
                     </h4>
                     <ol className="text-xs text-muted-foreground space-y-1 ml-6 list-decimal">
-                      <li>Click "Connect with Stripe" below</li>
+                      <li>Click &quot;Connect with Stripe&quot; below</li>
                       <li>Create or log into your Stripe account</li>
                       <li>Provide basic business information</li>
                       <li>Add bank account for payouts</li>
@@ -159,7 +157,7 @@ const StripeConnectPage = async () => {
             ) : (
               <div className="flex items-center gap-2">
                 <ExternalLink className="h-4 w-4" />
-                You'll be redirected to Stripe to complete the connection
+                You&apos;ll be redirected to Stripe to complete the connection
               </div>
             )}
           </div>

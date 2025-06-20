@@ -55,7 +55,7 @@ const LiveWebinarView = ({
   const router = useRouter();
   const [obsDialogBox, setObsDialogOpen] = useState(false);
   const [isMultiTabMode, setIsMultiTabMode] = useState(false);
-  const [aiAgentConnected, setAiAgentConnected] = useState(false);
+  const [aiAgentConnected] = useState(false);
   
 
   const handleEndStream = async () => {

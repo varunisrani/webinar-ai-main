@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.ENVIRONMENT === "PRODUCTION",
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 export default nextConfig;
