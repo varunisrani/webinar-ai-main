@@ -3,19 +3,29 @@
 import { aiAgentPrompt } from "@/lib/data";
 import { prismaClient } from "@/lib/prismaClient";
 import { vapiServer } from "@/lib/vapi/vapiServer";
+import { randomUUID } from "crypto";
 
-export const createAssistant = async (name: string, userId: string) => {
+export const createAssistant = async (name: string, userId: string, useDefaultAgent: boolean = true) => {
   try {
-    const createAssistant = await vapiServer.assistants.create({
+    // Generate our own ID since VAPI might not return one
+    const assistantId = randomUUID();
+    
+    const firstMessage = useDefaultAgent 
+      ? `Hey! This is ${name} from our brand partnerships team. I've been checking out your content and I'm really excited to chat with you about an amazing 5-video campaign opportunity we have. Are you ready to hear about something that could be a perfect fit for your audience?`
+      : `Hello! I'm ${name}, your AI assistant. How can I help you today?`;
+
+    const systemPrompt = useDefaultAgent ? aiAgentPrompt : "";
+
+    await vapiServer.assistants.create({
       name: name,
-      firstMessage: `Hey! This is ${name} from our brand partnerships team. I've been checking out your content and I'm really excited to chat with you about an amazing 5-video campaign opportunity we have. Are you ready to hear about something that could be a perfect fit for your audience?`,
+      firstMessage: firstMessage,
       model: {
         model: "gpt-4o",
         provider: "openai",
         messages: [
           {
             role: "system",
-            content: aiAgentPrompt,
+            content: systemPrompt,
           },
         ],
         temperature: 0.5,
@@ -23,18 +33,16 @@ export const createAssistant = async (name: string, userId: string) => {
       serverMessages: [],
     });
 
-    console.log("Assistant created:", createAssistant);
-
     const aiAgent = await prismaClient.aiAgents.create({
       data: {
-        id: createAssistant.id,
+        id: assistantId,
         model: "gpt-4o",
         provider: "openai",
-        prompt: aiAgentPrompt,
+        prompt: systemPrompt,
         name: name,
-        firstMessage: `Hey! This is ${name} from our brand partnerships team. I've been checking out your content and I'm really excited to chat with you about an amazing 5-video campaign opportunity we have. Are you ready to hear about something that could be a perfect fit for your audience?`,
+        firstMessage: firstMessage,
         userId: userId,
-        User:{
+        User: {
           connect: {
             id: userId,
           },

@@ -10,16 +10,19 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { createAssistant } from "@/action/vapi";
 import { useRouter } from "next/navigation";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  userId:string
+  userId: string;
 }
 
 const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [useDefaultAgent, setUseDefaultAgent] = useState(true);
   const router = useRouter();
 
   if (!isOpen) return null;
@@ -28,7 +31,7 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await createAssistant(name, userId);
+      const res = await createAssistant(name, userId, useDefaultAgent);
       if (!res.success) {
         throw new Error(res.message);
       }
@@ -72,11 +75,20 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
             </p>
           </div>
 
+          <div className="flex items-center space-x-2 mb-6">
+            <Switch
+              id="default-agent"
+              checked={useDefaultAgent}
+              onCheckedChange={setUseDefaultAgent}
+            />
+            <Label htmlFor="default-agent">Use default brand campaign agent</Label>
+          </div>
+
           <div className="flex justify-end gap-3">
             <Button type="button" onClick={onClose} variant="outline">
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim() || loading} >
+            <Button type="submit" disabled={!name.trim() || loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 animate-spin" />
