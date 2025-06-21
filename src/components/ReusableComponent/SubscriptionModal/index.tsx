@@ -77,9 +77,9 @@ const SubscriptionModal = ({ user }: Props) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Spotlight Subscription</DialogTitle>
+          <DialogTitle>Influencer Flow Subscription</DialogTitle>
           <DialogDescription>
-            Enter your payment details to subscribe to Spotlight and unlock all features.
+            Enter your payment details to subscribe to Influencer Flow and unlock all features.
           </DialogDescription>
         </DialogHeader>
         

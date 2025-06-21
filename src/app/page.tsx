@@ -85,9 +85,9 @@ function ElegantShape({
   )
 }
 
-const badge = 'By Web Prodigies'
+const badge = 'Influencer Flow AI'
 const title1 = 'Welcome To'
-const title2 = 'Spotlight Premium'
+const title2 = 'Influencer Flow'
 
 export default function HeroGeometric() {
   const fadeUpVariants = {
@@ -166,8 +166,8 @@ export default function HeroGeometric() {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] mb-8 md:mb-12"
           >
             <Image
-              src="https://kokonutui.com/logo.svg"
-              alt="Kokonut UI"
+              src="/vercel.svg"
+              alt="Influencer Flow"
               width={20}
               height={20}
             />
@@ -211,31 +211,6 @@ export default function HeroGeometric() {
             </div>
           </motion.div>
 
-          <motion.div
-            custom={3}
-            variants={fadeUpVariants}
-            initial="hidden"
-            animate="visible"
-            style={{
-              marginTop: '20px',
-            }}
-          >
-            <p className="text-muted-foreground/50">
-              This codebase is the property of Web Prodigies LLC and is intended
-              solely for customers who have legally obtained a copy of this
-              codebase. Unauthorized reproduction, distribution, or disclosure
-              of any part of this document is strictly prohibited. Web Prodigies
-              LLC. All rights reserved.
-            </p>
-            <Link href="https://webprodigies.com/store/collections/github-codebase">
-              <Badge
-                variant="outline"
-                className="mt-4 text-lg text-primary"
-              >
-                🔥Purchase the codebase by clicking here
-              </Badge>
-            </Link>
-          </motion.div>
         </div>
       </div>
 
