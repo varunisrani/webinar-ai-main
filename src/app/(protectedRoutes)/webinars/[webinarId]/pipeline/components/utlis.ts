@@ -1,7 +1,7 @@
 import { AttendedTypeEnum, CtaTypeEnum } from "@prisma/client"
 
 export const getColumnsForCtaType = (ctaType: CtaTypeEnum): AttendedTypeEnum[] => {
-  // Common columns for both CTA types
+  // Common columns for partnership negotiations
   const commonColumns = [
     AttendedTypeEnum.REGISTERED,
     AttendedTypeEnum.ATTENDED,
@@ -9,13 +9,9 @@ export const getColumnsForCtaType = (ctaType: CtaTypeEnum): AttendedTypeEnum[] =
     AttendedTypeEnum.CONVERTED,
   ]
 
-  // Add specific columns based on CTA type
-  if (ctaType === CtaTypeEnum.BUY_NOW) {
-    return [...commonColumns, AttendedTypeEnum.ADDED_TO_CART]
-  } else {
-    // BOOK_A_CALL
-    return [...commonColumns, AttendedTypeEnum.BREAKOUT_ROOM]
-  }
+  // All campaigns are now partnership negotiations (BOOK_A_CALL)
+  // Add breakout room for partnership discussions
+  return [...commonColumns, AttendedTypeEnum.BREAKOUT_ROOM]
 }
 
 export const formatColumnTitle = (columnType: AttendedTypeEnum): string => {

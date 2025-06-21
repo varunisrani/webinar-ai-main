@@ -33,9 +33,9 @@ export function SuccessStep({
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-green-600">🎉 AI Session Created & Live!</h2>
+        <h2 className="text-2xl font-bold text-green-600">🎉 Negotiation Session Live!</h2>
         <p className="text-muted-foreground">
-          Your AI agent is ready and waiting to interact with participants
+          Your AI negotiation agent is ready to facilitate brand-creator partnerships
         </p>
       </div>
 
@@ -43,11 +43,11 @@ export function SuccessStep({
         <div className="flex items-center justify-center gap-2 mb-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-            Session is LIVE and Ready
+            Negotiation Session is LIVE and Ready
           </span>
         </div>
         <p className="text-xs text-blue-600 dark:text-blue-400">
-          Participants can join immediately and start interacting with your AI agent
+          Creators can join immediately and start partnership discussions with your AI agent
         </p>
       </div>
 
@@ -71,6 +71,18 @@ export function SuccessStep({
         {copied && (
           <p className="text-xs text-green-600">✓ Link copied to clipboard!</p>
         )}
+      </div>
+
+      <div className="space-y-3">
+        <div className="bg-muted/30 rounded-lg p-3 text-left">
+          <p className="text-sm font-medium mb-1">📋 Next Steps:</p>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>• Share the link with potential creator partners</li>
+            <li>• Monitor negotiations through your dashboard</li>
+            <li>• Review AI agent conversation logs</li>
+            <li>• Finalize partnerships with interested creators</li>
+          </ul>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">

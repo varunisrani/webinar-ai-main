@@ -2,9 +2,9 @@ import { validateAdditionalInfo, validateBasicInfo, validateCTA, ValidationError
 import { CtaTypeEnum } from "@prisma/client"
 import { create } from "zustand"
 
-export type WebinarFormState = {
+export type CampaignFormState = {
   basicInfo: {
-    webinarName?: string
+    meetingName?: string
     description?: string
     // Removed date/time fields for instant start
   }
@@ -13,7 +13,7 @@ export type WebinarFormState = {
     tags?: string[]
     ctaType: CtaTypeEnum
     aiAgent?: string
-    // Removed priceId for non-sales focus
+    // Removed priceId for negotiation focus
   }
   additionalInfo: {
     lockChat?: boolean
@@ -28,14 +28,14 @@ type ValidationState = {
   additionalInfo: { valid: boolean; errors: ValidationErrors }
 }
 
-type WebinarStore = {
+type CampaignStore = {
   // UI state
   isModalOpen: boolean
   isComplete: boolean
   isSubmitting: boolean
 
   // Form data
-  formData: WebinarFormState
+  formData: CampaignFormState
   validation: ValidationState
 
   // UI state setters
@@ -45,15 +45,15 @@ type WebinarStore = {
 
   // Form field updaters
   updateBasicInfoField: (
-    field: keyof WebinarFormState["basicInfo"],
+    field: keyof CampaignFormState["basicInfo"],
     value: string | Date | undefined
   ) => void
   updateCTAField: (
-    field: keyof WebinarFormState["cta"],
+    field: keyof CampaignFormState["cta"],
     value: string | CtaTypeEnum
   ) => void
   updateAdditionalInfoField: (
-    field: keyof WebinarFormState["additionalInfo"],
+    field: keyof CampaignFormState["additionalInfo"],
     value: string | boolean
   ) => void
 
@@ -62,25 +62,25 @@ type WebinarStore = {
   removeTag: (tag: string) => void
 
   // Validation
-  validateStep: (step: keyof WebinarFormState) => boolean
-  getStepValidationErrors: (step: keyof WebinarFormState) => ValidationErrors
+  validateStep: (step: keyof CampaignFormState) => boolean
+  getStepValidationErrors: (step: keyof CampaignFormState) => ValidationErrors
 
   // Form management
   resetForm: () => void
 }
 
-const initialState: WebinarFormState = {
+const initialState: CampaignFormState = {
   basicInfo: {
-    webinarName: "",
+    meetingName: "",
     description: "",
     // No date/time for instant start
   },
   cta: {
-    ctaLabel: "Start AI Session",
+    ctaLabel: "Start Partnership Discussion",
     tags: [],
-    ctaType: "BOOK_A_CALL", // Default to AI interaction
+    ctaType: "BOOK_A_CALL", // Default to AI negotiation
     aiAgent: "",
-    // No priceId for non-sales focus
+    // No priceId for negotiation focus
   },
   additionalInfo: {
     lockChat: false,
@@ -95,7 +95,7 @@ const initialValidation: ValidationState = {
   additionalInfo: { valid: true, errors: {} }, // Additional info is optional by default
 }
 
-export const useWebinarStore = create<WebinarStore>((set, get) => ({
+export const useMeetingStore = create<CampaignStore>((set, get) => ({
   isModalOpen: false,
   isComplete: false,
   isSubmitting: false,
@@ -224,12 +224,12 @@ export const useWebinarStore = create<WebinarStore>((set, get) => ({
   },
 
   // Validation
-  validateStep: (step: keyof WebinarFormState) => {
+  validateStep: (step: keyof CampaignFormState) => {
     const state = get()
     return state.validation[step].valid
   },
 
-  getStepValidationErrors: (step: keyof WebinarFormState) => {
+  getStepValidationErrors: (step: keyof CampaignFormState) => {
     const state = get()
     return state.validation[step].errors
   },
@@ -243,4 +243,7 @@ export const useWebinarStore = create<WebinarStore>((set, get) => ({
     })
   },
 }))
+
+// Export for backward compatibility
+export const useWebinarStore = useMeetingStore;
 

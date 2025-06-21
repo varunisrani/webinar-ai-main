@@ -27,7 +27,7 @@ const Header = ({ assistants, user, stripeProducts }: Props) => {
           variant={'outline'}
           onClick={() => router.push('/webinars')}
         >
-          <ArrowLeft /> Back to Webinars
+          <ArrowLeft /> Back to Campaigns
         </Button>
       ) : (
         <div className="px-4 py-2 flex justify-center text-bold items-center rounded-xl bg-background border border-border text-primary capitalize">

@@ -18,7 +18,7 @@ const OnBoarding = async () => {
         ? status.connectStripe
         : index === 1
           ? status.createAiAgent
-          : status.createWebinar
+          : status.createCampaign
 
     if (isCompleted) return 'completed'
 
@@ -27,7 +27,7 @@ const OnBoarding = async () => {
       ? 0
       : !status.createAiAgent
         ? 1
-        : !status.createWebinar
+        : !status.createCampaign
           ? 2
           : -1
 

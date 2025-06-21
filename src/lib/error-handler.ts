@@ -3,72 +3,88 @@
  * Provides consistent error handling and user-friendly error messages
  */
 
-export interface AppError {
-  code: string;
-  message: string;
-  userMessage: string;
-  statusCode?: number;
-}
+type AppErrorContext = {
+  userId?: string;
+  action?: string;
+  resource?: string;
+  timestamp?: Date;
+};
 
-export class WebinarError extends Error {
-  code: string;
-  userMessage: string;
-  statusCode: number;
+export class MeetingError extends Error {
+  public readonly code: string;
+  public readonly statusCode: number;
+  public readonly userMessage: string;
+  public readonly context?: AppErrorContext;
 
-  constructor(code: string, message: string, userMessage?: string, statusCode = 500) {
+  constructor(code: string, message: string, userMessage: string, statusCode: number = 500, context?: AppErrorContext) {
     super(message);
-    this.name = 'WebinarError';
+    this.name = 'MeetingError';
     this.code = code;
-    this.userMessage = userMessage || message;
     this.statusCode = statusCode;
+    this.userMessage = userMessage;
+    this.context = context;
   }
 }
 
 // Common error codes and messages
 export const ErrorCodes = {
-  STREAM_ALREADY_RUNNING: 'STREAM_ALREADY_RUNNING',
+  // Authentication & Authorization
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  
+  // Meeting specific
+  MEETING_NOT_FOUND: 'MEETING_NOT_FOUND',
+  ACTIVE_MEETING_EXISTS: 'ACTIVE_MEETING_EXISTS',
+  MEETING_START_FAILED: 'MEETING_START_FAILED',
+  
+  // Stream related
+  STREAM_CREATE_FAILED: 'STREAM_CREATE_FAILED',
   STREAM_NOT_FOUND: 'STREAM_NOT_FOUND',
-  USER_NOT_AUTHENTICATED: 'USER_NOT_AUTHENTICATED',
-  WEBINAR_NOT_FOUND: 'WEBINAR_NOT_FOUND',
-  INVALID_PERMISSIONS: 'INVALID_PERMISSIONS',
-  STREAM_CREATION_FAILED: 'STREAM_CREATION_FAILED',
-  PAYMENT_FAILED: 'PAYMENT_FAILED',
-  EMAIL_SEND_FAILED: 'EMAIL_SEND_FAILED'
+  
+  // Generic
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  DATABASE_ERROR: 'DATABASE_ERROR',
+  EXTERNAL_SERVICE_ERROR: 'EXTERNAL_SERVICE_ERROR'
 } as const;
 
 // Error message mappings
-const errorMessages: Record<string, { message: string; userMessage: string }> = {
-  [ErrorCodes.STREAM_ALREADY_RUNNING]: {
-    message: 'User already has an active live stream',
-    userMessage: 'You already have a live webinar running. Please end your current webinar before starting a new one.'
+const ErrorMessages: Record<string, { message: string; userMessage: string }> = {
+  [ErrorCodes.ACTIVE_MEETING_EXISTS]: {
+    message: 'User already has an active meeting',
+    userMessage: 'You already have a live meeting running. Please end your current meeting before starting a new one.'
   },
-  [ErrorCodes.STREAM_NOT_FOUND]: {
-    message: 'Stream not found',
-    userMessage: 'The requested stream could not be found.'
+  [ErrorCodes.UNAUTHORIZED]: {
+    message: 'User is not authenticated',
+    userMessage: 'Please log in to access this feature.'
   },
-  [ErrorCodes.USER_NOT_AUTHENTICATED]: {
-    message: 'User not authenticated',
-    userMessage: 'Please log in to continue.'
-  },
-  [ErrorCodes.WEBINAR_NOT_FOUND]: {
-    message: 'Webinar not found',
-    userMessage: 'The requested webinar could not be found.'
-  },
-  [ErrorCodes.INVALID_PERMISSIONS]: {
-    message: 'User does not have permission for this action',
+  [ErrorCodes.FORBIDDEN]: {
+    message: 'User does not have permission to perform this action',
     userMessage: 'You do not have permission to perform this action.'
   },
-  [ErrorCodes.STREAM_CREATION_FAILED]: {
-    message: 'Failed to create stream',
-    userMessage: 'Failed to start the webinar. Please try again in a few moments.'
+  [ErrorCodes.MEETING_NOT_FOUND]: {
+    message: 'Meeting not found',
+    userMessage: 'The requested meeting could not be found.'
   },
-  [ErrorCodes.PAYMENT_FAILED]: {
-    message: 'Payment processing failed',
-    userMessage: 'Payment could not be processed. Please check your payment details and try again.'
+  [ErrorCodes.USER_NOT_FOUND]: {
+    message: 'User not found in database',
+    userMessage: 'User account not found. Please contact support.'
   },
-  [ErrorCodes.EMAIL_SEND_FAILED]: {
-    message: 'Failed to send email',
-    userMessage: 'Email notification could not be sent, but your action was completed successfully.'
+  [ErrorCodes.MEETING_START_FAILED]: {
+    message: 'Failed to start meeting stream',
+    userMessage: 'Failed to start the meeting. Please try again in a few moments.'
+  },
+  [ErrorCodes.STREAM_CREATE_FAILED]: {
+    message: 'Failed to create stream call',
+    userMessage: 'Failed to set up the meeting stream. Please try again.'
+  },
+  [ErrorCodes.STREAM_NOT_FOUND]: {
+    message: 'Stream call not found',
+    userMessage: 'Meeting stream not found. Please refresh and try again.'
+  },
+  [ErrorCodes.VALIDATION_ERROR]: {
+    message: 'Input validation failed',
+    userMessage: 'Please check your input and try again.'
   }
 };
 
@@ -77,98 +93,65 @@ const errorMessages: Record<string, { message: string; userMessage: string }> = 
  */
 export function createAppError(
   code: keyof typeof ErrorCodes,
-  customMessage?: string,
-  customUserMessage?: string,
-  statusCode = 500
-): WebinarError {
-  const errorConfig = errorMessages[code];
+  context?: AppErrorContext,
+  customMessage?: string
+): MeetingError {
+  const errorConfig = ErrorMessages[code];
   
-  if (!errorConfig) {
-    return new WebinarError(
-      'UNKNOWN_ERROR',
-      customMessage || 'An unknown error occurred',
-      customUserMessage || 'Something went wrong. Please try again.',
-      statusCode
-    );
-  }
-
-  return new WebinarError(
+  return new MeetingError(
     code,
     customMessage || errorConfig.message,
-    customUserMessage || errorConfig.userMessage,
-    statusCode
+    errorConfig.userMessage,
+    getStatusCodeForError(code),
+    context
   );
 }
 
 /**
  * Handles errors and returns appropriate user message
  */
-export function handleError(error: unknown): { message: string; code?: string } {
-  if (error instanceof WebinarError) {
-    return {
-      message: error.userMessage,
-      code: error.code
-    };
+export function handleError(error: unknown, context?: AppErrorContext): never {
+  if (error instanceof MeetingError) {
+    logError(error, context);
+    throw error;
   }
-
-  if (error instanceof Error) {
-    // Check for specific error patterns
-    const message = error.message.toLowerCase();
-    
-    if (message.includes('already have a live stream')) {
-      return {
-        message: errorMessages[ErrorCodes.STREAM_ALREADY_RUNNING].userMessage,
-        code: ErrorCodes.STREAM_ALREADY_RUNNING
-      };
+  
+  // Handle Prisma errors
+  if (error && typeof error === 'object' && 'code' in error) {
+    const prismaError = error as any;
+    if (prismaError.code === 'P2002') {
+      throw createAppError('VALIDATION_ERROR', context, 'Duplicate entry found');
     }
-    
-    if (message.includes('not authenticated') || message.includes('unauthorized')) {
-      return {
-        message: errorMessages[ErrorCodes.USER_NOT_AUTHENTICATED].userMessage,
-        code: ErrorCodes.USER_NOT_AUTHENTICATED
-      };
+    if (prismaError.code === 'P2025') {
+      throw createAppError('MEETING_NOT_FOUND', context);
     }
-    
-    if (message.includes('not found')) {
-      return {
-        message: 'The requested resource could not be found.',
-        code: 'NOT_FOUND'
-      };
-    }
-    
-    if (message.includes('permission') || message.includes('forbidden')) {
-      return {
-        message: errorMessages[ErrorCodes.INVALID_PERMISSIONS].userMessage,
-        code: ErrorCodes.INVALID_PERMISSIONS
-      };
-    }
-
-    // Return the original error message for unknown errors
-    return {
-      message: error.message
-    };
   }
-
-  // Fallback for unknown error types
-  return {
-    message: 'An unexpected error occurred. Please try again.'
-  };
+  
+  // Generic error
+  const genericError = createAppError(
+    'DATABASE_ERROR',
+    context,
+    error instanceof Error ? error.message : 'Unknown error occurred'
+  );
+  
+  logError(genericError, context);
+  throw genericError;
 }
 
 /**
  * Logs errors with consistent format
  */
-export function logError(error: unknown, context?: string): void {
+export function logError(error: MeetingError, context?: AppErrorContext): void {
   const timestamp = new Date().toISOString();
-  const contextStr = context ? ` [${context}]` : '';
+  const contextStr = context ? ` [Context: ${JSON.stringify(context)}]` : '';
   
-  if (error instanceof WebinarError) {
-    console.error(`${timestamp}${contextStr} WebinarError [${error.code}]:`, error.message);
-  } else if (error instanceof Error) {
-    console.error(`${timestamp}${contextStr} Error:`, error.message);
-    console.error('Stack:', error.stack);
+  if (error instanceof MeetingError) {
+    console.error(`${timestamp}${contextStr} MeetingError [${error.code}]:`, error.message);
+    if (error.context) {
+      console.error('Error context:', error.context);
+    }
   } else {
-    console.error(`${timestamp}${contextStr} Unknown error:`, error);
+    console.error(`${timestamp}${contextStr} Unexpected error:`, error);
   }
 }
 
@@ -176,23 +159,53 @@ export function logError(error: unknown, context?: string): void {
  * Validates common parameters and throws appropriate errors
  */
 export const validators = {
-  requireAuth: (userId?: string | null): string => {
-    if (!userId) {
-      throw createAppError('USER_NOT_AUTHENTICATED');
+  requireMeeting: (meeting: unknown): any => {
+    if (!meeting) {
+      throw createAppError('MEETING_NOT_FOUND');
+    }
+    return meeting;
+  },
+  
+  requireUser: (user: unknown): any => {
+    if (!user) {
+      throw createAppError('USER_NOT_FOUND');
+    }
+    return user;
+  },
+  
+  requireAuth: (userId: unknown): string => {
+    if (!userId || typeof userId !== 'string') {
+      throw createAppError('UNAUTHORIZED');
     }
     return userId;
-  },
-
-  requireWebinar: (webinar: unknown): any => {
-    if (!webinar) {
-      throw createAppError('WEBINAR_NOT_FOUND');
-    }
-    return webinar;
-  },
-
-  requirePermission: (userId: string, resourceOwnerId: string): void => {
-    if (userId !== resourceOwnerId) {
-      throw createAppError('INVALID_PERMISSIONS');
-    }
   }
-}; 
+};
+
+export function getStatusCodeForError(code: string): number {
+  switch (code) {
+    case ErrorCodes.UNAUTHORIZED:
+      return 401;
+    case ErrorCodes.FORBIDDEN:
+      return 403;
+    case ErrorCodes.MEETING_NOT_FOUND:
+    case ErrorCodes.USER_NOT_FOUND:
+    case ErrorCodes.STREAM_NOT_FOUND:
+      return 404;
+    case ErrorCodes.VALIDATION_ERROR:
+    case ErrorCodes.ACTIVE_MEETING_EXISTS:
+      return 400;
+    case ErrorCodes.MEETING_START_FAILED:
+    case ErrorCodes.STREAM_CREATE_FAILED:
+      return 500;
+    default:
+      return 500;
+  }
+}
+
+export function getUserFriendlyMessage(error: unknown): string {
+  if (error instanceof MeetingError) {
+    return error.userMessage;
+  }
+  
+  return 'An unexpected error occurred. Please try again later.';
+} 

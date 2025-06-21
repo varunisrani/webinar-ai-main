@@ -85,9 +85,9 @@ function ElegantShape({
   )
 }
 
-const badge = 'By Web Prodigies'
+const badge = 'AI Brand-Creator Negotiations'
 const title1 = 'Welcome To'
-const title2 = 'Spotlight Premium'
+const title2 = 'Influencer Flow'
 
 export default function HeroGeometric() {
   const fadeUpVariants = {
@@ -203,8 +203,7 @@ export default function HeroGeometric() {
             animate="visible"
           >
             <p className="text-base sm:text-lg md:text-xl text-white/40 mb-8 leading-relaxed font-light tracking-wide max-w-xl mx-auto px-4">
-              Crafting exceptional digital experiences through innovative design
-              and cutting-edge technology.
+              AI-powered negotiation platform connecting brands with creators through intelligent automation and seamless collaboration.
             </p>
             <div className="flex items-center justify-center flex-col">
               <Waitlist signInUrl="/sign-in" />
@@ -232,7 +231,7 @@ export default function HeroGeometric() {
                 variant="outline"
                 className="mt-4 text-lg text-primary"
               >
-                🔥Purchase the codebase by clicking here
+                🚀 Launch Your AI Negotiation Platform
               </Badge>
             </Link>
           </motion.div>

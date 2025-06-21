@@ -31,20 +31,20 @@ const CreateWebinarButton = ({ assistants }: Props) => {
   const steps = [
     {
       id: "basicInfo",
-      title: "Session Details",
-      description: "Set up your instant AI interaction session",
+      title: "Campaign Details",
+      description: "Set up your brand-creator partnership campaign",
       component: <BasicInfoStep />,
     },
     {
       id: "cta",
-      title: "AI Configuration",
-      description: "Select and configure your AI agent for the session",
+      title: "AI Agent Configuration",
+      description: "Select and configure your negotiation AI agent",
       component: <CTAStep assistants={assistants} />,
     },
     {
       id: "additionalInfo",
-      title: "Session Options",
-      description: "Configure additional settings for your AI session",
+      title: "Campaign Settings",
+      description: "Configure additional settings for your campaign",
       component: <AdditionalInfoStep />,
     },
   ];
@@ -99,8 +99,8 @@ const CreateWebinarButton = ({ assistants }: Props) => {
         ) : (
           <>
             <DialogTitle className="sr-only">Create AI Session</DialogTitle>
-            <DialogDescription className="sr-only">
-              Create a new AI session by following the steps below
+            <DialogDescription className="text-center text-muted-foreground">
+              Create a new AI-powered brand-creator negotiation campaign
             </DialogDescription>
             <MultiStepForm steps={steps} onComplete={handleComplete} />
           </>

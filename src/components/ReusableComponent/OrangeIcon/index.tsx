@@ -6,7 +6,7 @@ type Props = {
   children: React.ReactNode;
 };
 
-const PurpleIcon = ({ className, children }: Props) => {
+const OrangeIcon = ({ className, children }: Props) => {
   return (
     <div
       className={cn(
@@ -19,4 +19,4 @@ const PurpleIcon = ({ className, children }: Props) => {
   );
 };
 
-export default PurpleIcon;
+export default OrangeIcon;

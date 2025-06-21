@@ -6,8 +6,6 @@ import { Mic, MicOff, PhoneOff, Clock, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi/vapiClient";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { createCheckoutLink } from "@/action/stripe";
 import { toast } from "sonner";
 import { changeCallStatus } from "@/action/attendance";
 import { CallStatusEnum } from "@prisma/client";
@@ -32,7 +30,7 @@ type Props = {
 const AutoConnectCall = ({
   userName = "User",
   assistantId,
-  assistantName = "Vapi Assistant",
+  assistantName = "Partnership Negotiator",
   callTimeLimit = 180, // 3 minutes default
   webinar,
   userId,
@@ -117,7 +115,7 @@ const AutoConnectCall = ({
     }
   };
 
-  // Start the call
+  // Start the negotiation call
   const startCall = async () => {
     try {
       setCallStatus(CallStatus.CONNECTING);
@@ -126,15 +124,15 @@ const AutoConnectCall = ({
       if (!res.success) {
         throw new Error("Failed to update call status");
       }
-      toast.success("Call started successfully");
+      toast.success("Partnership negotiation started successfully");
     } catch (error) {
-      console.error("Failed to start call:", error);
-      toast.error("Failed to start call. Please try again.");
+      console.error("Failed to start negotiation:", error);
+      toast.error("Failed to start negotiation. Please try again.");
       setCallStatus(CallStatus.FINISHED);
     }
   };
 
-  // Stop the call
+  // Stop the negotiation call
   const stopCall = async () => {
     try {
       vapi.stop();
@@ -144,10 +142,10 @@ const AutoConnectCall = ({
       if (!res.success) {
         throw new Error("Failed to update call status");
       }
-      toast.success("Call ended successfully");
+      toast.success("Partnership negotiation ended successfully");
     } catch (error) {
-      console.error("Failed to stop call:", error);
-      toast.error("Failed to stop call. Please try again.");
+      console.error("Failed to stop negotiation:", error);
+      toast.error("Failed to stop negotiation. Please try again.");
     }
   };
 
@@ -170,34 +168,9 @@ const AutoConnectCall = ({
       .padStart(2, "0")}`;
   };
 
-  const checkoutLink = async () => {
-    try {
-      if (!webinar?.priceId || !webinar?.presenter?.stripeConnectId) {
-        return toast.error("No priceId or stripeConnectId found");
-      }
-      const session = await createCheckoutLink(
-        webinar.priceId,
-        webinar?.presenter?.stripeConnectId,
-        userId,
-        webinar.id
-
-      );
-      if (!session.sessionUrl) {
-        throw new Error("Session ID not found in response");
-      }
-
-      window.open(session.sessionUrl, "_blank");
-    } catch (error) {
-      console.error("Error creating checkout link", error);
-      toast.error("Failed to create checkout session. Please try again.");
-    }
-  };
-
-
-
   // Call setup & cleanup
   useEffect(() => {
-    // Start the call immediately on mount
+    // Start the negotiation immediately on mount
     startCall();
   }, []); // Empty dependency array means this runs once on mount
 
@@ -206,7 +179,7 @@ const AutoConnectCall = ({
   useEffect(() => {
     // Call event handlers
     const onCallStart = async () => {
-      console.log("Call started");
+      console.log("Partnership negotiation started");
       setCallStatus(CallStatus.ACTIVE);
       setupAudio();
 
@@ -225,7 +198,7 @@ const AutoConnectCall = ({
     };
 
     const onCallEnd = () => {
-      console.log("Call ended");
+      console.log("Partnership negotiation ended");
       setCallStatus(CallStatus.FINISHED);
       cleanup();
     };
@@ -265,7 +238,7 @@ const AutoConnectCall = ({
     <div className="flex flex-col h-[calc(100vh-80px)] bg-background">
       {/* Main call area */}
       <div className="flex-1 flex flex-col md:flex-row p-4 gap-4 relative">
-        {/* AI Assistant */}
+        {/* AI Negotiation Agent */}
         <div className="flex-1 bg-card rounded-xl overflow-hidden shadow-lg relative">
           <div className="absolute top-4 left-4 bg-black/40 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2 z-10">
             <Mic
@@ -313,7 +286,7 @@ const AutoConnectCall = ({
           </div>
         </div>
 
-        {/* User */}
+        {/* Creator/User */}
         <div className="flex-1 bg-card rounded-xl overflow-hidden shadow-lg relative">
           <div className="absolute top-4 left-4 bg-black/40 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2 z-10">
             {isMicMuted ? (
@@ -334,7 +307,7 @@ const AutoConnectCall = ({
             )}
           </div>
 
-          {/* Call time remaining indicator */}
+          {/* Negotiation time remaining indicator */}
           <div className="absolute top-4 right-4 bg-black/40 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2 z-10">
             <Clock className="h-4 w-4" />
             <span>{formatTime(timeRemaining)}</span>
@@ -383,26 +356,26 @@ const AutoConnectCall = ({
           </div>
         </div>
 
-        {/* Call status overlay */}
+        {/* Negotiation status overlay */}
         {callStatus === CallStatus.CONNECTING && (
           <div className="absolute inset-0 bg-background/80 flex items-center justify-center flex-col gap-4 z-20">
             <div className="size-20 rounded-full border-4 border-t-transparent border-accent-primary animate-spin" />
-            <h3 className="text-xl font-medium">Connecting...</h3>
+            <h3 className="text-xl font-medium">Connecting to Partnership Negotiator...</h3>
           </div>
         )}
 
         {callStatus === CallStatus.FINISHED && (
           <div className="absolute inset-0 bg-background/90 flex items-center justify-center flex-col gap-4 z-20">
-            <h3 className="text-xl font-medium">Call Ended</h3>
-            <p className="text-muted-foreground">Time limit reached</p>
+            <h3 className="text-xl font-medium">Partnership Discussion Ended</h3>
+            <p className="text-muted-foreground">Thank you for the negotiation session</p>
           </div>
         )}
       </div>
 
-      {/* Call controls */}
+      {/* Negotiation controls */}
       <div className="bg-card border-t border-border p-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between flex-wrap gap-3">
-          {/* Call info */}
+          {/* Negotiation info */}
           <div className="flex items-center gap-2">
             {callStatus === CallStatus.ACTIVE && (
               <div className="flex items-center gap-2">
@@ -423,7 +396,7 @@ const AutoConnectCall = ({
             )}
           </div>
 
-          {/* Call actions */}
+          {/* Negotiation actions */}
           <div className="flex items-center gap-4">
             <button
               onClick={toggleMicMute}
@@ -445,22 +418,18 @@ const AutoConnectCall = ({
             <button
               onClick={stopCall}
               className="p-3 rounded-full bg-destructive text-primary hover:bg-destructive/90 transition-all"
-              aria-label="End call"
+              aria-label="End negotiation"
               disabled={callStatus !== CallStatus.ACTIVE}
             >
               <PhoneOff className="h-6 w-6" />
             </button>
           </div>
 
-          <Button onClick={checkoutLink} variant={"outline"}>
-            Buy Now
-          </Button>
-
           {/* Right side info */}
           <div className="hidden md:block">
             {callStatus === CallStatus.ACTIVE && timeRemaining < 30 && (
               <span className="text-destructive font-medium">
-                Call ending soon
+                Negotiation ending soon
               </span>
             )}
           </div>

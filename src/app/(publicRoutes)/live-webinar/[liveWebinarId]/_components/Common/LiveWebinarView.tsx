@@ -268,8 +268,8 @@ const LiveWebinarView = ({
                 </Button>
                 <Button onClick={handleCTAButtonClick}>
                   {webinar.ctaType === CtaTypeEnum.BOOK_A_CALL
-                    ? "Book a Call"
-                    : "Buy Now"}
+                    ? "Start Partnership"
+                    : "Start Partnership"}
                 </Button>
               </div>
             )}

@@ -6,19 +6,19 @@ import { currentUser } from "@clerk/nextjs/server";
 import { createAndStartStream } from "./stremIo";
 import { WebinarStatusEnum } from "@prisma/client";
 
-export const createWebinar = async (
+export const createCampaign = async (
   formData: {
     basicInfo: {
-      webinarName?: string;
+      meetingName?: string;
       description?: string;
-      // No date/time for instant sessions
+      // No date/time for instant campaigns
     };
     cta: {
       ctaLabel?: string;
       tags?: string[];
       ctaType?: string;
       aiAgent?: string;
-      // No priceId for non-sales focus
+      // No priceId for negotiation focus
     };
     additionalInfo: {
       lockChat?: boolean;
@@ -33,7 +33,7 @@ export const createWebinar = async (
     if (!user?.id) {
       return {
         status: 401,
-        message: "Unauthorized: Please sign in to create a session",
+        message: "Unauthorized: Please sign in to create a campaign",
       };
     }
 
@@ -54,7 +54,7 @@ export const createWebinar = async (
     if (!formData.cta.aiAgent) {
       return {
         status: 400,
-        message: "AI Agent selection is required for instant sessions",
+        message: "AI Agent selection is required for negotiation campaigns",
       };
     }
 
@@ -72,20 +72,20 @@ export const createWebinar = async (
       };
     }
 
-    // Set start time to now for instant sessions
+    // Set start time to now for instant campaigns
     const startTime = new Date();
 
-    // Create the webinar/session with instant start
-    const webinar = await prismaClient.webinar.create({
+    // Create the campaign with instant start
+    const campaign = await prismaClient.webinar.create({
       data: {
-        title: formData.basicInfo.webinarName || "AI Session",
+        title: formData.basicInfo.meetingName || "Brand Partnership Campaign",
         description: formData.basicInfo.description || "",
         startTime: startTime, // Start immediately
         tags: formData.cta.tags || [],
-        ctaLabel: formData.cta.ctaLabel || "Start AI Session",
-        ctaType: "BOOK_A_CALL", // Always AI interaction for instant sessions
+        ctaLabel: formData.cta.ctaLabel || "Start Partnership Discussion",
+        ctaType: "BOOK_A_CALL", // Always AI negotiation for campaigns
         aiAgentId: formData.cta.aiAgent,
-        priceId: null, // No pricing for instant AI sessions
+        priceId: null, // No pricing for negotiation campaigns
         lockChat: formData.additionalInfo.lockChat || false,
         couponCode: formData.additionalInfo.couponEnabled
           ? formData.additionalInfo.couponCode
@@ -96,13 +96,13 @@ export const createWebinar = async (
       },
     });
 
-    // Auto-start the stream for instant sessions
+    // Auto-start the stream for instant campaigns
     try {
-      await createAndStartStream(webinar);
+      await createAndStartStream(campaign);
       
       // Update status to LIVE immediately
       await prismaClient.webinar.update({
-        where: { id: webinar.id },
+        where: { id: campaign.id },
         data: { webinarStatus: "LIVE" },
       });
     } catch (streamError) {
@@ -110,23 +110,26 @@ export const createWebinar = async (
       // Don't fail the entire creation if stream fails - user can manually start
     }
 
-    // Revalidate the webinars page to show the new session
+    // Revalidate the campaigns page to show the new campaign
     revalidatePath("/");
 
     return {
       status: 200,
-      message: "AI Session created and started successfully!",
-      webinarId: webinar.id,
-      webinarLink: `/live-webinar/${webinar.id}`,
+      message: "Campaign created and started successfully!",
+      meetingId: campaign.id,
+      meetingLink: `/live-meeting/${campaign.id}`,
     };
   } catch (error) {
-    console.error("Error creating AI session:", error);
+    console.error("Error creating campaign:", error);
     return {
       status: 500,
-      message: "Failed to create AI session. Please try again.",
+      message: "Failed to create campaign. Please try again.",
     };
   }
 };
+
+// Export alias for backward compatibility
+export const createMeeting = createCampaign;
 
 // Helper function to combine date and time
 function combineDateTime(
@@ -150,14 +153,14 @@ function combineDateTime(
   return result;
 }
 
-export const getWebinarByPresenterId = async (
+export const getMeetingByPresenterId = async (
   presenterId: string,
-  webinarStatus?: string
+  meetingStatus?: string
 ) => {
   try {
    let statusFilter: WebinarStatusEnum | undefined;
    
-   switch (webinarStatus) {
+   switch (meetingStatus) {
       case "upcoming":
         statusFilter = WebinarStatusEnum.SCHEDULED;
         break;
@@ -169,7 +172,7 @@ export const getWebinarByPresenterId = async (
     }
 
 
-    const webinars = await prismaClient.webinar.findMany({
+    const meetings = await prismaClient.webinar.findMany({
       where: {
         presenterId,
         webinarStatus: statusFilter
@@ -185,17 +188,17 @@ export const getWebinarByPresenterId = async (
       },
     });
 
-    return webinars;
+    return meetings;
   } catch (error) {
-    console.error("Error fetching webinars:", error);
-    throw new Error("Failed to fetch webinars");
+    console.error("Error fetching meetings:", error);
+    throw new Error("Failed to fetch meetings");
   }
 };
 
-export const getWebinarById = async (webinarId: string) => {
+export const getMeetingById = async (meetingId: string) => {
   try {
-    const webinar = await prismaClient.webinar.findUnique({
-      where: { id: webinarId },
+    const meeting = await prismaClient.webinar.findUnique({
+      where: { id: meetingId },
       include: {
         presenter: {
           select: {
@@ -208,22 +211,22 @@ export const getWebinarById = async (webinarId: string) => {
       },
     });
 
-    return webinar;
+    return meeting;
   } catch (error) {
-    console.error("Error fetching webinar:", error);
-    throw new Error("Failed to fetch webinar");
+    console.error("Error fetching meeting:", error);
+    throw new Error("Failed to fetch meeting");
   }
 };
 
-// change webinar status
-export const changeWebinarStatus = async (
-  webinarId: string,
+// change meeting status
+export const changeMeetingStatus = async (
+  meetingId: string,
   status: WebinarStatusEnum
 ) => {
   try {
-    const webinar = await prismaClient.webinar.update({
+    const meeting = await prismaClient.webinar.update({
       where: {
-        id: webinarId,
+        id: meetingId,
       },
       data: {
         webinarStatus: status,
@@ -233,15 +236,15 @@ export const changeWebinarStatus = async (
     return {
       status: 200,
       success: true,
-      message: "Webinar status updated successfully",
-      data: webinar,
+      message: "Meeting status updated successfully",
+      data: meeting,
     };
   } catch (error) {
-    console.error("Error updating webinar status:", error);
+    console.error("Error updating meeting status:", error);
     return {
       status: 500,
       success: false,
-      message: "Failed to update webinar status. Please try again.",
+      message: "Failed to update meeting status. Please try again.",
     };
   }
 };

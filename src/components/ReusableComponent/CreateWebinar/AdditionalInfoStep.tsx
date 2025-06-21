@@ -29,13 +29,20 @@ const AdditionalInfoStep = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-primary mb-2">Campaign Settings</h2>
+        <p className="text-muted-foreground">
+          Configure additional settings for your brand-creator negotiation campaign
+        </p>
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
           <Label htmlFor="lock-chat" className="text-base font-medium">
-            Lock Chat
+            Disable Chat During Negotiations
           </Label>
-          <p className="text-sm text-gray-400">Turn it on to make chat visible to your users at all time</p>
+          <p className="text-sm text-gray-400">When enabled, only the AI agent can send messages during active negotiations</p>
         </div>
         <Switch id="lock-chat" checked={lockChat || false} onCheckedChange={handleToggleLockChat} />
       </div>
@@ -44,9 +51,9 @@ const AdditionalInfoStep = () => {
         <div className="flex items-center justify-between">
           <div>
             <Label htmlFor="coupon-enabled" className="text-base font-medium">
-              Coupon Code
+              Special Offer Code
             </Label>
-            <p className="text-sm text-gray-400">Turn it on to offer discounts to your viewers</p>
+            <p className="text-sm text-gray-400">Enable this if you want to offer special pricing or terms to creators</p>
           </div>
           <Switch id="coupon-enabled" checked={couponEnabled || false} onCheckedChange={handleToggleCoupon} />
         </div>
@@ -57,7 +64,7 @@ const AdditionalInfoStep = () => {
               id="coupon-code"
               value={couponCode || ""}
               onChange={handleCouponCodeChange}
-              placeholder="Paste the code here"
+              placeholder="Enter special offer code"
               className={cn(
                 "!bg-background/50 border border-input",
                 errors.couponCode && "border-red-400 focus-visible:ring-red-400",
@@ -66,7 +73,7 @@ const AdditionalInfoStep = () => {
             {errors.couponCode && <p className="text-sm text-red-400">{errors.couponCode}</p>}
             <div className="flex items-start gap-2 text-sm text-gray-400 mt-2">
               <Info className="h-4 w-4 mt-0.5" />
-              <p>This coupon code can be used to promote a sale. Users can use it for the buy now CTA</p>
+              <p>This code will be automatically applied during the negotiation process to offer special terms to creators</p>
             </div>
           </div>
         )}

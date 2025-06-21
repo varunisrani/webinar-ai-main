@@ -6,7 +6,7 @@ import { Check, ChevronRight, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useWebinarStore } from "@/store/useWebinarStore";
-import { createWebinar } from "@/action/webinar";
+import { createCampaign } from "@/action/webinar";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -57,23 +57,23 @@ const MultiStepForm = ({ steps, onComplete }: Props) => {
       // Submit the form
       try {
         setSubmitting(true);
-        const result = await createWebinar(formData);
+        const result = await createCampaign(formData);
 
-        if (result.status === 200 && result.webinarId) {
-          toast.success("🎉 AI Session created and started successfully!");
+        if (result.status === 200 && result.meetingId) {
+          toast.success("🎉 Campaign created and started successfully!");
 
-          onComplete(result.webinarId);
+          onComplete(result.meetingId);
         } else {
           toast.error(
-            result.message || "Failed to create AI session. Please try again."
+            result.message || "Failed to create campaign. Please try again."
           );
           setValidationError(result.message);
         }
         router.refresh();
       } catch (error) {
-        console.error("Error creating AI session:", error);
-        toast.error("Failed to create AI session. Please try again.");
-        setValidationError("Failed to create AI session. Please try again.");
+        console.error("Error creating campaign:", error);
+        toast.error("Failed to create campaign. Please try again.");
+        setValidationError("Failed to create campaign. Please try again.");
       } finally {
         setSubmitting(false);
       }
@@ -237,10 +237,10 @@ const MultiStepForm = ({ steps, onComplete }: Props) => {
             isSubmitting ? (
               <>
                 <Loader2 className="animate-spin" />
-                Creating & Starting...
+                Creating Campaign...
               </>
             ) : (
-              "🚀 Create & Start AI Session"
+              "🚀 Create & Launch Campaign"
             )
           ) : (
             "Next"

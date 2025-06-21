@@ -72,14 +72,14 @@ const SubscriptionModal = ({ user }: Props) => {
       <DialogTrigger asChild>
         <button className="rounded-xl flex gap-2 items-center hover:cursor-pointer px-4 py-2 border border-border bg-primary/10 backdrop-blur-sm text-sm font-normal text-primary hover:bg-primary-20">
           <PlusIcon />
-          Create Webinar
+          Create Partnership Campaign
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Spotlight Subscription</DialogTitle>
+          <DialogTitle>Influencer Flow Subscription</DialogTitle>
           <DialogDescription>
-            Enter your payment details to subscribe to Spotlight and unlock all features.
+            Enter your payment details to subscribe to Influencer Flow and unlock all partnership negotiation features.
           </DialogDescription>
         </DialogHeader>
         

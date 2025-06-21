@@ -8,14 +8,14 @@ export type ValidationResult = {
 }
 
 export const validateBasicInfo = (data: {
-  webinarName?: string
+  meetingName?: string
   description?: string
-  // Removed date/time fields for instant sessions
+  // Removed date/time fields for instant campaigns
 }): ValidationResult => {
   const errors: ValidationErrors = {}
 
-  if (!data.webinarName?.trim()) {
-    errors.webinarName = "Session name is required"
+  if (!data.meetingName?.trim()) {
+    errors.meetingName = "Campaign name is required"
   }
 
   if (!data.description?.trim()) {
@@ -71,7 +71,7 @@ export const validateAdditionalInfo = (data: {
   }
 }
 
-export type WebinarStatus = "upcoming" | "live" | "ended"
+export type MeetingStatus = "upcoming" | "live" | "ended"
 
 export type AttendanceData = {
   count: number;
@@ -94,7 +94,7 @@ export type ChatEvent = {
   cid: string;
 }
 
-export type WebinarWithPresenter = Webinar & {
+export type MeetingWithPresenter = Webinar & {
   presenter : User
 }
 

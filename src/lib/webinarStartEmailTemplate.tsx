@@ -1,19 +1,16 @@
 import * as React from 'react';
 
-type EmailTemplateProps = {
-  webinarId: string;
-}
-
-const EmailTemplate= ({
+const WebinarStartEmailTemplate = ({
   webinarId,
-}:EmailTemplateProps) => (
-  <div>
-    <h1>Welcome, Join the webinar</h1>
+}: {
+  webinarId: string;
+}) => (
+  <>
+    <h1>Welcome, Join the Partnership Campaign</h1>
     <a href={`${process.env.NEXT_PUBLIC_BASE_URL}/live-webinar/${webinarId}`}>
-      Click here
+      Click here to join the campaign discussion
     </a>
-  </div>
+  </>
 );
 
-
-export default EmailTemplate;
+export default WebinarStartEmailTemplate;

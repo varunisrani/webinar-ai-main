@@ -10,7 +10,7 @@ const BasicInfoStep = () => {
   const { formData, updateBasicInfoField, getStepValidationErrors } =
     useWebinarStore()
 
-  const { webinarName, description } = formData.basicInfo
+  const { meetingName, description } = formData.basicInfo
   const errors = getStepValidationErrors('basicInfo')
 
   const handleChange = (
@@ -23,35 +23,35 @@ const BasicInfoStep = () => {
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-primary mb-2">Create AI Agent Session</h2>
+        <h2 className="text-2xl font-bold text-primary mb-2">Create Campaign Negotiation</h2>
         <p className="text-muted-foreground">
-          Set up an instant AI-powered interaction session that starts immediately
+          Set up an AI-powered negotiation session to connect brands with creators
         </p>
       </div>
 
       <div className="space-y-2">
         <Label
-          htmlFor="webinarName"
-          className={errors.webinarName ? 'text-red-400' : ''}
+          htmlFor="meetingName"
+          className={errors.meetingName ? 'text-red-400' : ''}
         >
-          Session Name <span className="text-red-400">*</span>
+          Campaign Name <span className="text-red-400">*</span>
         </Label>
         <Input
-          id="webinarName"
-          name="webinarName"
-          value={webinarName || ''}
+          id="meetingName"
+          name="meetingName"
+          value={meetingName || ''}
           onChange={handleChange}
-          placeholder="AI Product Demo Session"
+          placeholder="Brand Partnership Campaign 2024"
           className={cn(
             '!bg-background/50 border border-input',
-            errors.webinarName && 'border-red-400 focus-visible:ring-red-400'
+            errors.meetingName && 'border-red-400 focus-visible:ring-red-400'
           )}
         />
-        {errors.webinarName && (
-          <p className="text-sm text-red-400">{errors.webinarName}</p>
+        {errors.meetingName && (
+          <p className="text-sm text-red-400">{errors.meetingName}</p>
         )}
         <p className="text-xs text-muted-foreground">
-          This will be displayed to participants when they join your session
+          This will be displayed to creators when they join the negotiation session
         </p>
       </div>
 
@@ -60,16 +60,17 @@ const BasicInfoStep = () => {
           htmlFor="description"
           className={errors.description ? 'text-red-400' : ''}
         >
-          Session Description <span className="text-red-400">*</span>
+          Campaign Description
         </Label>
         <Textarea
           id="description"
           name="description"
           value={description || ''}
           onChange={handleChange}
-          placeholder="Describe what participants can expect from this AI interaction session..."
+          placeholder="Brief overview of the brand partnership opportunity and what you're looking for in creator collaborations..."
+          rows={4}
           className={cn(
-            'min-h-[100px] !bg-background/50 border border-input',
+            '!bg-background/50 border border-input resize-none',
             errors.description && 'border-red-400 focus-visible:ring-red-400'
           )}
         />
@@ -77,7 +78,7 @@ const BasicInfoStep = () => {
           <p className="text-sm text-red-400">{errors.description}</p>
         )}
         <p className="text-xs text-muted-foreground">
-          Explain the purpose and what participants will learn or achieve
+          Provide context about the partnership opportunity and collaboration goals
         </p>
       </div>
 

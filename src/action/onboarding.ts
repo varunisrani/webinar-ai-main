@@ -32,15 +32,15 @@ export const getOnboardingStatus = async () => {
     const hasAiAgents =
       currentUserRecord.aiAgents && currentUserRecord.aiAgents.length > 0;
 
-    // Check if user has created any webinars
-    // Only count webinars that are actually created by the user and not in draft
-    const hasCreatedWebinar = currentUserRecord.webinars.some(
+    // Check if user has created any campaigns (webinars)
+    // Only count campaigns that are actually created by the user and not in draft
+    const hasCreatedCampaign = currentUserRecord.webinars.some(
       (webinar) =>
         webinar.presenterId === currentUserRecord.id &&
         webinar.webinarStatus !== WebinarStatusEnum.CANCELLED
     );
 
-    // Check if user has any leads (attendees who registered for their webinars)
+    // Check if user has any creator leads (attendees who registered for their campaigns)
     const hasLeads = await prismaClient.attendance.findFirst({
       where: {
         webinar: {
@@ -50,7 +50,7 @@ export const getOnboardingStatus = async () => {
       },
     });
 
-    // Check if user has any converted leads
+    // Check if user has any converted creator leads
     const hasConvertedLeads = await prismaClient.attendance.findFirst({
       where: {
         webinar: {
@@ -63,7 +63,7 @@ export const getOnboardingStatus = async () => {
     return {
       status: 200,
       steps: {
-        createWebinar: hasCreatedWebinar,
+        createCampaign: hasCreatedCampaign,
         connectStripe: hasStripeConnected,
         createAiAgent: hasAiAgents,
         getLeads: !!hasLeads,

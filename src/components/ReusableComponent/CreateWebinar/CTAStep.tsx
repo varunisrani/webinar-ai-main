@@ -54,9 +54,35 @@ const CTAStep = ({ assistants }: Props) => {
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-primary mb-2">Configure AI Agent</h2>
+        <h2 className="text-2xl font-bold text-primary mb-2">AI Negotiation Agent</h2>
         <p className="text-muted-foreground">
-          Select your AI agent and customize the interaction experience
+          Configure your AI agent to handle brand-creator negotiations
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label
+          htmlFor="ctaLabel"
+          className={errors.ctaLabel ? 'text-red-400' : ''}
+        >
+          Negotiation Button Label <span className="text-red-400">*</span>
+        </Label>
+        <Input
+          id="ctaLabel"
+          name="ctaLabel"
+          value={ctaLabel || ''}
+          onChange={handleChange}
+          placeholder="Start Partnership Discussion"
+          className={cn(
+            '!bg-background/50 border border-input',
+            errors.ctaLabel && 'border-red-400 focus-visible:ring-red-400'
+          )}
+        />
+        {errors.ctaLabel && (
+          <p className="text-sm text-red-400">{errors.ctaLabel}</p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          This text will appear on the button that starts the negotiation
         </p>
       </div>
 
@@ -121,60 +147,39 @@ const CTAStep = ({ assistants }: Props) => {
         </p>
       </div>
 
-      {/* Session Call-to-Action */}
-      <div className="space-y-2">
-        <Label>
-          <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            Session Action Button Text
-          </div>
-        </Label>
-        <Input
-          name="ctaLabel"
-          value={ctaLabel || ''}
-          onChange={handleChange}
-          placeholder="Talk to AI Assistant"
-          className="!bg-background/50 border border-input"
-        />
-        <p className="text-xs text-muted-foreground">
-          Text that appears on the button participants click to start AI interaction
-        </p>
-      </div>
-
       {/* Tags for categorization */}
       <div className="space-y-2">
-        <Label>
-          Session Tags
-        </Label>
-        <div className="space-y-2">
-          <Input
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={handleAddTag}
-            placeholder="Add tags (press Enter to add)"
-            className="!bg-background/50 border border-input"
-          />
-          {tags && tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full text-sm"
-                >
-                  {tag}
-                                     <button
-                     onClick={() => removeTag(tag)}
-                     className="hover:bg-primary/20 rounded-full p-0.5"
-                   >
-                     <X className="h-3 w-3" />
-                   </button>
-                </div>
-              ))}
+        <Label className="text-sm font-medium">Campaign Tags</Label>
+        <div className="flex flex-wrap gap-2 min-h-[2.5rem] p-2 border border-input rounded-md bg-background/50">
+          <div className="flex items-center gap-1">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleAddTag}
+              placeholder="Add partnership focus areas..."
+              className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground min-w-[200px]"
+            />
+          </div>
+          {(tags || []).map((tag, index) => (
+            <div
+              key={index}
+              className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs"
+            >
+              <span>{tag}</span>
+              <button
+                onClick={() => removeTag(tag)}
+                className="hover:bg-primary/20 rounded-full p-0.5"
+                aria-label={`Remove ${tag} tag`}
+              >
+                <X className="h-3 w-3" />
+              </button>
             </div>
-          )}
+          ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          Add tags to help categorize and organize your AI sessions
+          Add relevant tags like "lifestyle", "tech", "fashion", etc. Press Enter to add each tag.
         </p>
       </div>
 
@@ -184,11 +189,11 @@ const CTAStep = ({ assistants }: Props) => {
           <div className="flex items-center gap-2 mb-2">
             <Bot className="h-5 w-5 text-green-600" />
             <span className="font-medium text-green-700 dark:text-green-300">
-              AI Agent Ready
+              Negotiation Agent Ready
             </span>
           </div>
           <p className="text-sm text-green-600 dark:text-green-400">
-            Your selected AI agent is configured and ready to interact with participants!
+            Your AI negotiation agent is configured and ready to facilitate brand-creator discussions!
           </p>
         </div>
       )}

@@ -1,4 +1,4 @@
-export const buyNowWebinarAttendanceData = {
+export const partnershipCampaignAttendanceData = {
   success: true,
   data: {
     REGISTERED: {
@@ -139,7 +139,7 @@ export const buyNowWebinarAttendanceData = {
         // In reality, there would be 145 users here
       ]
     },
-    ADDED_TO_CART: {
+    BREAKOUT_ROOM: {
       count: 87,
       users: [
         {
@@ -242,6 +242,6 @@ export const buyNowWebinarAttendanceData = {
       ]
     }
   },
-  ctaType: "BUY_NOW",
-  webinarTags: ["Marketing", "Strategy", "Business", "Sales"]
+  ctaType: "BOOK_A_CALL",
+  campaignTags: ["Influencer Marketing", "Brand Partnerships", "Content Creation", "Negotiations"]
 };
